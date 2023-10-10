@@ -1,25 +1,44 @@
-import { useEffect, useState } from 'react';
+import React from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+
 import './App.css';
-import axios from 'axios';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import Main from './pages/Main';
+import Accounts from './pages/Accounts';
+import Games from './pages/Games';
+import Settings from './pages/Settings';
+import NotFound from './pages/NotFound';
+import { Nav } from 'react-bootstrap';
+import CustomNavLink from './components/CustomNavLink';
 
 export default function App() {
-	const [test, setTest] = useState<string>('');
-
-	async function send() {
-		const resp = await axios.get('https://wtfismyip.com/json');
-		setTest(JSON.stringify(resp.data));
-	}
-
-	useEffect(() => {
-		send();
-	}, []);
+	const location = useLocation();
 
 	return (
 		<div>
-			<h1 className="text-danger">Hello World!</h1>
-			{test}
+			<Nav fill variant="tabs" defaultActiveKey={location.pathname}>
+				<CustomNavLink path='/'>Steam Updater</CustomNavLink>
+				<CustomNavLink path='/accounts'>Accounts</CustomNavLink>
+				<CustomNavLink path='/games'>Games</CustomNavLink>
+				<CustomNavLink path='/settings'>Settings</CustomNavLink>
+			</Nav>
+
+			<div>
+				<Routes>
+					{/* Remove index.html from out nav path */}
+					<Route path="/index.html" element={<Navigate to="/" />} />
+
+					{/* All our routes */}
+					<Route path="/" element={<Main />} />
+					<Route path="/accounts" element={<Accounts />} />
+					<Route path="/games" element={<Games />} />
+					<Route path="/settings" element={<Settings />} />
+
+					{/* Error page */}
+					<Route path="*" element={<NotFound/>} />
+				</Routes>
+			</div>
 		</div>
 	);
 }

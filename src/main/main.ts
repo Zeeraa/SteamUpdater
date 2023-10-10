@@ -13,6 +13,12 @@ import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
+import DataFolder from './utils/DataFolder';
+import SteamUpdater from './steamupdater/SteamUpdater';
+
+DataFolder.mkdir();
+
+const steamUpdater = new SteamUpdater();
 
 class AppUpdater {
 	constructor() {
@@ -118,6 +124,7 @@ app.on('window-all-closed', () => {
 app.whenReady()
 	.then(() => {
 		createWindow();
+		steamUpdater.init();
 		app.on('activate', () => {
 			// On macOS it's common to re-create a window in the app when the
 			// dock icon is clicked and there are no other windows open.
