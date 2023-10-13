@@ -25,7 +25,6 @@ export default function App() {
 
 	return (
 		<div>
-			{location.pathname}
 			<Nav fill variant="tabs" defaultActiveKey={location.pathname}>
 				<CustomNavLink path='/'>Steam Updater</CustomNavLink>
 				<CustomNavLink path='/accounts'>Accounts</CustomNavLink>
