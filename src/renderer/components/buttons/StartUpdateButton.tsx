@@ -1,6 +1,6 @@
 import React from 'react'
 import { Button } from 'react-bootstrap'
-import { useSteamUpdater } from '../context/SteamUpdaterContext'
+import { useSteamUpdater } from '../../context/SteamUpdaterContext'
 
 interface Props {
 	className?: string

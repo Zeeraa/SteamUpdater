@@ -9,6 +9,7 @@ import { ToastType } from "../../shared/toast/ToastType";
 import LoginTestResponse, { LoginTestResult } from "../../shared/LoginTestResponse";
 import SteamappsSelectedResponse from "../../shared/SteamappsSelectedResponse";
 import SteamUpdaterState, { State } from "../../shared/SteamUpdaterState";
+import LogMessage from "../../shared/LogMessage";
 
 export enum SteamUpdaterFrontendEvent {
 	CONFIG_CHANGED = "configChanged",
@@ -16,12 +17,17 @@ export enum SteamUpdaterFrontendEvent {
 	STEAMAPPS_FOLDER_SELECTED = "steamappsFolderSelected",
 	CONFIG_SAVED = "configSaved",
 	STATE_UPDATE = "stateUpdate",
+	LOGS_FETCHED = "logsFetched",
+	LOG_MESSAGE = "logMessage",
 }
 
 export default class SteamUpdaterFrontend {
 	private _config: SteamUpdaterConfig;
 	private _state: SteamUpdaterState;
 	private _events = new EventEmitter();
+	private _logs: LogMessage[] = [];
+	private _logBacklog: LogMessage[] = [];
+	private initialLogsFetched: boolean = false;
 
 	constructor() {
 		this._state = {
@@ -58,6 +64,31 @@ export default class SteamUpdaterFrontend {
 
 				case IPCAction.BACKEND_GAME_INFO_RESPONSE:
 					this.events.emit(SteamUpdaterFrontendEvent.GAME_LOOKUP_RESULT, args.data as SteamGameLookupResult);
+					break;
+
+				case IPCAction.BACKEND_LOG_MESSAGE:
+					const logMessage = args.data as LogMessage;
+					console.log("[" + logMessage.type + "] " + logMessage.message);
+					if (this.initialLogsFetched) {
+						this.events.emit(SteamUpdaterFrontendEvent.LOG_MESSAGE, logMessage);
+						this._logs.push(logMessage);
+					} else {
+						this._logBacklog.push(logMessage);
+					}
+					break;
+
+				case IPCAction.BACKEND_FULL_LOG:
+					if (!this.initialLogsFetched) {
+						const logMessages = args.data as LogMessage[];
+						this._logs = logMessages;
+						this.initialLogsFetched = true;
+						this.events.emit(SteamUpdaterFrontendEvent.LOGS_FETCHED, this._logs);
+						this._logBacklog.forEach(backlogEntry => {
+							this.events.emit(SteamUpdaterFrontendEvent.LOG_MESSAGE, backlogEntry);
+							this._logs.push(backlogEntry);
+						});
+						this._logBacklog = [];
+					}
 					break;
 
 				case IPCAction.BACKEND_SEND_TOAST_MESSAGE:
@@ -107,21 +138,28 @@ export default class SteamUpdaterFrontend {
 					break;
 			}
 		});
+	}
 
+	init() {
 		console.log("Frontend init");
 		this.fetchConfig();
 		this.fetchState();
+		this.fetchInitialLogs();
+	}
+
+	get logs() {
+		return this._logs;
 	}
 
 	get state() {
 		return this._state;
 	}
 
-	set state(state: SteamUpdaterState) {
-		this._state = state;
-		console.log(state);
+	set state(newState: SteamUpdaterState) {
+		this._state = newState;
+		console.log(newState);
 		// TODO: Check if state changed
-		this.events.emit(SteamUpdaterFrontendEvent.STATE_UPDATE, this._state);
+		this.events.emit(SteamUpdaterFrontendEvent.STATE_UPDATE, newState);
 	}
 
 	get config() {
@@ -131,7 +169,7 @@ export default class SteamUpdaterFrontend {
 	set config(newConfig: SteamUpdaterConfig) {
 		this._config = newConfig;
 		// TODO: Check if config changed
-		this.events.emit(SteamUpdaterFrontendEvent.CONFIG_CHANGED, this._config);
+		this.events.emit(SteamUpdaterFrontendEvent.CONFIG_CHANGED, newConfig);
 	}
 
 	get events() {
@@ -160,6 +198,7 @@ export default class SteamUpdaterFrontend {
 		const request: SteamGameLookupRequest = {
 			appId: appId
 		}
+
 		window.electron.ipcRenderer.sendMessage('ipc-main', {
 			action: IPCAction.FRONTEND_REQUEST_GAME_INFO,
 			data: request
@@ -174,6 +213,13 @@ export default class SteamUpdaterFrontend {
 		});
 	}
 
+	killSteamCMD() {
+		console.log("Sending kill request");
+		window.electron.ipcRenderer.sendMessage('ipc-main', {
+			action: IPCAction.FRONTEND_KILL_UPDATE
+		});
+	}
+
 	fetchConfig() {
 		console.log("Requesting config from server");
 		window.electron.ipcRenderer.sendMessage('ipc-main', {
@@ -185,6 +231,12 @@ export default class SteamUpdaterFrontend {
 		console.log("Requesting state from server");
 		window.electron.ipcRenderer.sendMessage('ipc-main', {
 			action: IPCAction.FRONTEND_FORCE_STATE_UPDATE
+		});
+	}
+
+	fetchInitialLogs() {
+		window.electron.ipcRenderer.sendMessage('ipc-main', {
+			action: IPCAction.FRONTEND_REQUEST_LOGS
 		});
 	}
 }

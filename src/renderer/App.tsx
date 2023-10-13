@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 import './App.css';
@@ -12,9 +12,16 @@ import NotFound from './pages/NotFound';
 import { Nav } from 'react-bootstrap';
 import CustomNavLink from './components/CustomNavLink';
 import { Toaster } from 'react-hot-toast';
+import { useSteamUpdater } from './context/SteamUpdaterContext';
 
 export default function App() {
+	const steamUpdater = useSteamUpdater();
 	const location = useLocation();
+
+	useEffect(() => {
+		console.log("steamUpdater.init()");
+		steamUpdater.init();
+	}, []);
 
 	return (
 		<div>

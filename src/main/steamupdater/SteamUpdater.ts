@@ -19,12 +19,17 @@ import SteamappsSelectedResponse from '../../shared/SteamappsSelectedResponse';
 import SteamAccount from '../../shared/SteamAccount';
 import SteamCMDProcess from './steamcmd/SteamCMDProcess';
 import SteamUpdaterState, { State, UpdateStatus } from '../../shared/SteamUpdaterState';
+import Logger from './logger/Logger';
+import DefaultLogger from './logger/impl/DefaultLogger';
+import { format } from 'date-fns';
+import { ConsoleColor } from '../../shared/ConsoleColor';
 
 export default class SteamUpdater {
 	// Classes
 	private steamcmdManager: SteamCMDManager;
 	private symlinkCreator: SymlinkCreator;
 	public mainWindow?: Electron.BrowserWindow;
+	public _logger: DefaultLogger;
 
 	// Config and data files
 	private config: SteamUpdaterConfig;
@@ -37,12 +42,14 @@ export default class SteamUpdater {
 	private updateStatus: UpdateStatus | null;
 	private processRunning: boolean;
 	private currentSteamcmdProcess: SteamCMDProcess;
+	private updateKilled: boolean;
 
 	constructor() {
 		this.mainWindow = null;
 		this.currentSteamcmdProcess = null;
 		this.loginTestRunning = false;
 		this.updateStatus = null;
+		this.updateKilled = false;
 		this._state = {
 			state: State.READY,
 			loginTestRunning: false,
@@ -53,6 +60,14 @@ export default class SteamUpdater {
 		DataFolder.mkdir();
 		this.dataFolder = DataFolder.get();
 		this.configFile = path.join(this.dataFolder, "config.json");
+
+		const logFolder = path.join(this.dataFolder, "logs");
+		if (!fs.existsSync(logFolder)) {
+			fs.mkdirSync(logFolder);
+		}
+
+		const logFile = path.join(logFolder, `log_${format(new Date(), 'yyyy-MM-dd_HH-mm-ss')}.txt`);
+		this._logger = new DefaultLogger(logFile, this);
 
 		this.processRunning = false;
 
@@ -91,9 +106,14 @@ export default class SteamUpdater {
 					});
 					break;
 
-					case IPCAction.FRONTEND_FORCE_STATE_UPDATE:
+				case IPCAction.FRONTEND_FORCE_STATE_UPDATE:
 					console.debug("Client forced state update");
 					this.updateState();
+					break;
+
+				case IPCAction.FRONTEND_KILL_UPDATE:
+					console.debug("Client is sending a kill request");
+					this.kill();
 					break;
 
 				case IPCAction.FONTEND_UPDATE_CONFIG:
@@ -109,7 +129,9 @@ export default class SteamUpdater {
 
 				case IPCAction.FRONTEND_REQUEST_GAME_INFO:
 					const gameInfoRequestData = args.data as SteamGameLookupRequest;
+					console.debug("Looking up game with AppID " + gameInfoRequestData.appId);
 					const gameInfoApiResponse = await SteamAPIWrapper.lookupSteamGame(gameInfoRequestData.appId);
+					console.debug("Lookup completed");
 					event.reply("ipc-main", {
 						action: IPCAction.BACKEND_GAME_INFO_RESPONSE,
 						data: gameInfoApiResponse
@@ -118,7 +140,7 @@ export default class SteamUpdater {
 
 				case IPCAction.FRONTEND_BEGIN_LOGIN_TEST:
 					if (this.processRunning) {
-						this.logError("Cant start login test because steamcmd is already running");
+						this.logger.logError("Cant start login test because steamcmd is already running");
 						this.sendToast("SteamCMD is already running", ToastType.ERROR);
 						return;
 					}
@@ -127,14 +149,14 @@ export default class SteamUpdater {
 					try {
 						const loginTestExitCode = await this.runLoginTest();
 						if (loginTestExitCode == 0) {
-							this.logInfo("Login test exited with exit code zero");
+							this.logger.logInfo("Login test exited with exit code zero");
 							loginTestResult = LoginTestResult.OK;
 						} else {
-							this.logWarning("Login test exited with non zero exit code");
+							this.logger.logWarning("Login test exited with non zero exit code");
 							loginTestResult = LoginTestResult.NON_ZERO_EXIT_CODE;
 						}
 					} catch (err) {
-						this.logError("Login test failed to start due to an exception");
+						this.logger.logError("Login test failed to start due to an exception");
 						loginTestResult = LoginTestResult.ERROR
 					}
 					this.processRunning = false;
@@ -168,15 +190,22 @@ export default class SteamUpdater {
 					}
 					break;
 
+				case IPCAction.FRONTEND_REQUEST_LOGS:
+					event.reply("ipc-main", {
+						action: IPCAction.BACKEND_FULL_LOG,
+						data: this._logger.messages
+					});
+					break;
+
 				case IPCAction.FRONTEND_START_UPDATE:
 					if (this.processRunning) {
-						this.logError("Cant start update because steamcmd is already running");
+						this.logger.logError("Cant start update because steamcmd is already running");
 						this.sendToast("Cant start update because SteamCMD is already running", ToastType.ERROR);
 					} else {
 						try {
 							await this.runUpdate();
 						} catch (err) {
-							this.logError("Update failed");
+							this.logger.logError("Update failed");
 							console.error(err);
 						}
 					}
@@ -189,16 +218,29 @@ export default class SteamUpdater {
 		});
 	}
 
+	get logger(): Logger {
+		return this._logger;
+	}
+
 	get state() {
 		return this._state;
 	}
 
 	private set state(state: SteamUpdaterState) {
 		this._state = state;
-		if(this.mainWindow != null) {
+		if (this.mainWindow != null) {
 			this.mainWindow.webContents.send("ipc-main", {
 				action: IPCAction.BACKEND_CURRENT_STATE,
 				data: this._state
+			});
+		}
+	}
+
+	sendIPCAction(action: IPCAction, data: any = null) {
+		if (this.mainWindow != null) {
+			this.mainWindow.webContents.send("ipc-main", {
+				action: action,
+				data: data
 			});
 		}
 	}
@@ -268,7 +310,7 @@ export default class SteamUpdater {
 				await this.steamcmdManager.installSteamCMD();
 			} catch (err) {
 				console.error(err);
-				this.logError("Failed to install SteamCMD");
+				this.logger.logError("Failed to install SteamCMD");
 			}
 		}
 		this.updateState();
@@ -276,17 +318,22 @@ export default class SteamUpdater {
 
 	runUpdate(): Promise<void> {
 		return new Promise(async (resolve, reject) => {
+			this.updateKilled = false;
 			this.processRunning = true;
 
 			let error: any = null;
 			const steamcmdSteamappsPath = path.join(this.steamcmdManager.getSteamCMDFolder(), "steamapps");
-			this.logInfo("Steamcmd steamapps folder: " + steamcmdSteamappsPath);
+			this.logger.logInfo("Steamcmd steamapps folder: " + steamcmdSteamappsPath);
 			var currentSymlink: string = null;
 
 			try {
 				const games = this.config.games.filter(game => !game.disabled);
 
 				for (let i = 0; i < games.length; i++) {
+					if (this.updateKilled) {
+						break;
+					}
+
 					const game = games[i];
 
 					this.updateStatus = {
@@ -298,16 +345,16 @@ export default class SteamUpdater {
 
 					const directory: string = game.customSteamDirectory == null ? this.config.steamPath : game.customSteamDirectory;
 
-					this.logInfo("Next game to update is " + game.displayName);
+					this.logger.logInfo("Next game to update is " + game.displayName, ConsoleColor.GREEN);
 
 					if (currentSymlink != directory) {
 						if (currentSymlink != null) {
-							this.logInfo("Removing symlink " + currentSymlink + " -> " + steamcmdSteamappsPath);
+							this.logger.logInfo("Removing symlink " + currentSymlink + " -> " + steamcmdSteamappsPath);
 							fs.rmSync(steamcmdSteamappsPath);
 						}
-						this.logInfo("Creating a link between " + directory + " -> " + steamcmdSteamappsPath);
+						this.logger.logInfo("Creating a link between " + directory + " -> " + steamcmdSteamappsPath);
 						if (fs.existsSync(steamcmdSteamappsPath)) {
-							this.logInfo("Removing steamapps folder from " + steamcmdSteamappsPath);
+							this.logger.logInfo("Removing steamapps folder from " + steamcmdSteamappsPath);
 							fs.removeSync(steamcmdSteamappsPath);
 						}
 						await this.symlinkCreator.createSymlink(SymlinkType.JUNCTION, directory, steamcmdSteamappsPath);
@@ -323,20 +370,23 @@ export default class SteamUpdater {
 						cmdLine += account.username + " \"" + account.password + "\" ";
 					}
 
-					cmdLine += "+app_update " + game.appId + " +exit";
+					cmdLine += "+app_update " + game.appId + (game.validate ? " validate" : "") + " +exit";
 
-					this.currentSteamcmdProcess = this.steamcmdManager.runCommand(cmdLine, this.logSteamcmdMessage, this.logSteamcmdError);
+					this.currentSteamcmdProcess = this.steamcmdManager.runCommand(cmdLine, message => this.logger.logStdout(message), message => this.logger.logStderr(message));
 					const exitCode: number = await this.currentSteamcmdProcess.getPromise();
 
+					// When validating steamcmd seems to exit with code 1 on success so lets treat 1 as success as well if we are using validate
 					if (exitCode == 0) {
-						this.logInfo("SteamCMD exited with code 0");
+						this.logger.logInfo("SteamCMD exited with code 0");
+					} else if (game.validate && exitCode == 1) {
+						this.logger.logInfo("SteamCMD exited with code 1 (This means validate did not report any error)");
 					} else {
-						this.logError("SteamCMD exited with non zero exit code " + exitCode);
+						this.logger.logError("SteamCMD exited with non zero exit code " + exitCode);
 					}
 				}
 			} catch (err) {
 				error = err;
-				this.logError("An exception occured while running update");
+				this.logger.logError("An exception occured while running update");
 				console.error(err);
 			}
 
@@ -345,7 +395,7 @@ export default class SteamUpdater {
 			this.updateState();
 
 			if (currentSymlink != null) {
-				this.logInfo("Removing symlink " + currentSymlink + " -> " + steamcmdSteamappsPath);
+				this.logger.logInfo("Removing symlink " + currentSymlink + " -> " + steamcmdSteamappsPath);
 				fs.rmSync(steamcmdSteamappsPath);
 			}
 
@@ -355,6 +405,15 @@ export default class SteamUpdater {
 
 			resolve();
 		});
+	}
+
+	kill() {
+		this.updateKilled = true;
+		if (this.currentSteamcmdProcess != null) {
+			this.currentSteamcmdProcess.kill();
+			this._logger.logInfo("SteamCMD killed", ConsoleColor.RED);
+		}
+
 	}
 
 	runLoginTest(): Promise<number> {
@@ -390,25 +449,5 @@ export default class SteamUpdater {
 
 	getConfig(): SteamUpdaterConfig {
 		return this.config;
-	}
-
-	logInfo(message) {
-		console.log(message);
-	}
-
-	logSteamcmdMessage(message) {
-		console.log("[SteamCMD:STDOUT] " + message);
-	}
-
-	logSteamcmdError(message) {
-		console.error("[SteamCMD:STDERR] " + message);
-	}
-
-	logWarning(message) {
-		console.warn(message);
-	}
-
-	logError(message) {
-		console.error(message);
 	}
 }

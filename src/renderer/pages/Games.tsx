@@ -58,6 +58,7 @@ export default function Games() {
 									<th>Account</th>
 									<th className="t-fit"></th>
 									<th className="t-fit"></th>
+									<th className="t-fit"></th>
 								</tr>
 							</thead>
 
@@ -67,7 +68,7 @@ export default function Games() {
 
 							<tbody>
 								<tr>
-									<td colSpan={4}></td>
+									<td colSpan={5}></td>
 									<td>
 										<Button className='w-100' variant='success' onClick={showAddGameModal}>Add</Button>
 									</td>

@@ -13,6 +13,10 @@ export enum IPCAction {
 	FRONTEND_OPEN_STEAMAPPS_PICKER = "client_open_steamapps_picker",
 	/** Sent when the client starts an update */
 	FRONTEND_START_UPDATE = "client_start_update",
+	/** Sent by frontend to request full log */
+	FRONTEND_REQUEST_LOGS = "client_request_logs",
+	/** Sent when the frontend tries to kill the login test or update */
+	FRONTEND_KILL_UPDATE = "client_kill_update",
 	/** Backend sends state to frontend */
 	BACKEND_CURRENT_STATE = "server_current_state",
 	/** Backend replies to let the frontend know the config was saved */
@@ -26,5 +30,9 @@ export enum IPCAction {
 	/** Backend sends a toast message to the frontend */
 	BACKEND_SEND_TOAST_MESSAGE = "server_send_toast_message",
 	/** Backend sends the selected steamapps directory */
-	BACKEND_STEAMAPPS_SELECTED = "server_steamapps_selected"
+	BACKEND_STEAMAPPS_SELECTED = "server_steamapps_selected",
+	/** Backend sends this when a new message is logged */
+	BACKEND_LOG_MESSAGE = "server_log_message",
+	/** Backend sends fill log to frontend */
+	BACKEND_FULL_LOG = "server_full_log"
 }

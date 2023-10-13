@@ -6,4 +6,5 @@ export default interface SteamGame {
 	customSteamDirectory?: string;
 	thumbnail?: string;
 	disabled: boolean;
+	validate: boolean;
 }

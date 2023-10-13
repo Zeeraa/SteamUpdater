@@ -6,9 +6,9 @@ import { SteamAccountTableEntry } from '../components/SteamAccountTableEntry';
 import "../table_fit.css";
 import SteamAccount from '../../shared/SteamAccount';
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
-import StartLoginTestButton from '../components/StartLoginTestButton';
+import StartLoginTestButton from '../components/buttons/StartLoginTestButton';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
-import StartUpdateButton from '../components/StartUpdateButton';
+import KillButton from '../components/buttons/KillButton';
 
 export default function Accounts() {
 	const steamUpdater = useSteamUpdater();
@@ -55,7 +55,8 @@ export default function Accounts() {
 
 				<Row className='mt-2'>
 					<Col>
-						<StartLoginTestButton />
+						<StartLoginTestButton className='xm-1 mt-1' />
+						<KillButton className='mx-1 mt-1' />
 					</Col>
 				</Row>
 			</Container>

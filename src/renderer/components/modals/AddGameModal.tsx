@@ -98,6 +98,7 @@ export default function AddGameModal({ visible, onClose, onAddGame }: Props) {
 			appId: appId,
 			displayName: gameName,
 			disabled: false,
+			validate: true,
 			accountId: account,
 			thumbnail: gameBanner,
 			id: UUID.v4()

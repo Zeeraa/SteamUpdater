@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import SteamGame from '../../shared/SteamGame'
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { Button, FormCheck, FormSelect, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from 'react-bootstrap';
-import SteamAccount from '../../shared/SteamAccount';
 import SteamAccountSelectOptions from './SteamAccountSelectOptions';
 
 interface Props {
@@ -42,9 +41,21 @@ export default function SteamGameTableEntry({ steamGame }: Props) {
 		steamUpdater.saveConfig();
 	}
 
+	function handleSetValidate(e: React.FormEvent<HTMLInputElement>) {
+		steamUpdater.config = {
+			...steamUpdater.config,
+			games: steamUpdater.config.games.map((game: SteamGame) =>
+				game.id === steamGame.id
+					? { ...game, validate: e.currentTarget.checked }
+					: game
+			)
+		}
+		steamUpdater.saveConfig();
+	}
+
 	function handleAccountChange(e: React.FormEvent<HTMLSelectElement>) {
 		let newAccount = (e.target as HTMLSelectElement).value;
-		if(newAccount.trim().length == 0) {
+		if (newAccount.trim().length == 0) {
 			newAccount = null;
 		}
 
@@ -66,8 +77,11 @@ export default function SteamGameTableEntry({ steamGame }: Props) {
 				<td>{steamGame.displayName}</td>
 				<td>
 					<FormSelect onChange={handleAccountChange} value={steamGame.accountId == null ? "" : steamGame.accountId}>
-						<SteamAccountSelectOptions/>
+						<SteamAccountSelectOptions />
 					</FormSelect>
+				</td>
+				<td className="t-fit">
+					<FormCheck type='switch' checked={steamGame.validate} onChange={handleSetValidate} label="Validate" />
 				</td>
 				<td className="t-fit">
 					<FormCheck type='switch' checked={!steamGame.disabled} onChange={handleSetEnabled} label="Enable" />
