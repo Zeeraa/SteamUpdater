@@ -24,6 +24,7 @@ import DefaultLogger from './logger/impl/DefaultLogger';
 import { format } from 'date-fns';
 import { ConsoleColor } from '../../shared/ConsoleColor';
 import { Console } from 'console';
+import SteamGame from '../../shared/SteamGame';
 
 export default class SteamUpdater {
 	// Classes
@@ -346,7 +347,20 @@ export default class SteamUpdater {
 			var currentSymlink: string = null;
 
 			try {
-				const games = this.config.games.filter(game => !game.disabled);
+				const isAccountDisabled = (game: SteamGame): boolean => {
+					if (game.accountId == null) {
+						return false;
+					}
+
+					const account = this.config.accounts.find(a => a.id == game.accountId);
+					if (account == null) {
+						return true;
+					}
+
+					return account.disabled;
+				}
+
+				const games = this.config.games.filter(game => !game.disabled && !isAccountDisabled(game));
 
 				for (let i = 0; i < games.length; i++) {
 					if (this.updateKilled) {
