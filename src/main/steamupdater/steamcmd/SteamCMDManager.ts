@@ -13,4 +13,6 @@ export default abstract class SteamCMDManager {
 	abstract getSteamCMDExecutable(): string;
 
 	abstract getSteamCMDFolder(): string;
+
+	abstract uninstall(): boolean;
 }

@@ -188,6 +188,12 @@ export default class SteamUpdaterFrontend {
 		});
 	}
 
+	reinstallSteamCMD() {
+		window.electron.ipcRenderer.sendMessage('ipc-main', {
+			action: IPCAction.FRONTEND_REINSTALL_STEAMCMD
+		});
+	}
+
 	invokeSteamappsPicker() {
 		window.electron.ipcRenderer.sendMessage('ipc-main', {
 			action: IPCAction.FRONTEND_OPEN_STEAMAPPS_PICKER

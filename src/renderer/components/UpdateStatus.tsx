@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { Col, Container, ProgressBar, Ratio, Row } from 'react-bootstrap'
+import { Col, Container, Modal, ModalBody, ModalDialog, ModalFooter, ModalHeader, ModalTitle, ProgressBar, Ratio, Row } from 'react-bootstrap'
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import SteamUpdaterState, { State } from '../../shared/SteamUpdaterState';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
@@ -10,6 +10,8 @@ import { SteamGameLookupResult } from '../../shared/SteamGameLookup';
 import gamePlaceholderImage from "../../../assets/game_header_placeholder.png";
 
 import "./UpdateStatus.css";
+import KillButton from './buttons/KillButton';
+import LogOutput from './log/LogOutput';
 
 export default function UpdateStatus() {
 	const steamUpdater = useSteamUpdater();
@@ -72,25 +74,39 @@ export default function UpdateStatus() {
 	return (
 		<>
 			{steamupdaterState.state == State.UPDATING &&
-				<Container fluid>
-					<Row>
-						<Col>
-							<div className='text-center'>
-								<img className='update-status-game-header' src={currentGameInfo == null ? gamePlaceholderImage : currentGameInfo.header_image} />
-							</div>
-						</Col>
-					</Row>
-					<Row>
-						<Col>
-							<h4 className='text-center'>Updating Game <span>{steamupdaterState.updateStatus.currentIndex}</span> / <span>{steamupdaterState.updateStatus.totalGames}</span>: <span>{steamupdaterState.updateStatus.game.displayName}</span></h4>
-						</Col>
-					</Row>
-					<Row>
-						<Col>
-							<ProgressBar variant="info" striped now={calculatePercentage(steamupdaterState)} label={steamupdaterState.updateStatus.currentIndex + " / " + steamupdaterState.updateStatus.totalGames} />
-						</Col>
-					</Row>
-				</Container>
+				<Modal show={true} fullscreen>
+					<ModalHeader>
+						<ModalTitle>Updating Games <span>{steamupdaterState.updateStatus.currentIndex}</span> / <span>{steamupdaterState.updateStatus.totalGames}</span></ModalTitle>
+					</ModalHeader>
+
+					<ModalBody>
+						<Container fluid>
+							<Row>
+								<Col>
+									<div className='text-center'>
+										<img className='update-status-game-header' src={currentGameInfo == null ? gamePlaceholderImage : currentGameInfo.header_image} />
+									</div>
+								</Col>
+							</Row>
+							<Row>
+								<Col>
+									<h4 className='text-center'>Updating Game <span>{steamupdaterState.updateStatus.currentIndex}</span> / <span>{steamupdaterState.updateStatus.totalGames}</span>: <span>{steamupdaterState.updateStatus.game.displayName}</span></h4>
+								</Col>
+							</Row>
+							<Row>
+								<Col>
+									<ProgressBar variant="info" striped now={calculatePercentage(steamupdaterState)} label={steamupdaterState.updateStatus.currentIndex + " / " + steamupdaterState.updateStatus.totalGames} />
+								</Col>
+							</Row>
+							<Row>
+								<LogOutput />
+							</Row>
+						</Container>
+					</ModalBody>
+					<ModalFooter>
+						<KillButton />
+					</ModalFooter>
+				</Modal>
 			}
 		</>
 	)

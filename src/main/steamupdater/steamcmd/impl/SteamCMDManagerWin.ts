@@ -37,8 +37,8 @@ export default class SteamCMDManagerWin extends SteamCMDManager {
 				if(fs.existsSync(this.steamcmdFolder)) {
 					console.log("Deleting existing steamcmd folder...");
 					fs.removeSync(this.steamcmdFolder);
-					fs.mkdirSync(this.steamcmdFolder, { recursive: true });
 				}
+				fs.mkdirSync(this.steamcmdFolder, { recursive: true });
 
 				console.log("Downloading zip file from " + SteamCMDManagerWin.STEAMCMD_URL_WIN) + "...";
 				const response = await axios.get(SteamCMDManagerWin.STEAMCMD_URL_WIN, { responseType: 'arraybuffer' });
@@ -66,6 +66,7 @@ export default class SteamCMDManagerWin extends SteamCMDManager {
 					console.error("Failed to download steamcmd. Did not find exe at " + this.steamcmdExecutable);
 					throw new Error("Steamcmd download failed. Expected to extract to " + this.steamcmdExecutable + " but file was not found");
 				}
+				resolve();
 			} catch(err) {
 				reject(err);
 			}
@@ -88,5 +89,14 @@ export default class SteamCMDManagerWin extends SteamCMDManager {
 
 	getSteamCMDFolder(): string {
 		return this.steamcmdFolder;
+	}
+
+	uninstall(): boolean {
+		if(fs.existsSync(this.steamcmdFolder)) {
+			console.log("Uninstalling steamcmd...");
+			fs.removeSync(this.steamcmdFolder);
+			return true;
+		}
+		return false;
 	}
 }

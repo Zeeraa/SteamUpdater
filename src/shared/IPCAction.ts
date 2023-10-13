@@ -17,6 +17,8 @@ export enum IPCAction {
 	FRONTEND_REQUEST_LOGS = "client_request_logs",
 	/** Sent when the frontend tries to kill the login test or update */
 	FRONTEND_KILL_UPDATE = "client_kill_update",
+	/** Sent when the client forces a reinstall of steamcmd */
+	FRONTEND_REINSTALL_STEAMCMD = "client_reinstall_steamcmd",
 	/** Backend sends state to frontend */
 	BACKEND_CURRENT_STATE = "server_current_state",
 	/** Backend replies to let the frontend know the config was saved */

@@ -4,7 +4,6 @@ import StartUpdateButton from '../components/buttons/StartUpdateButton'
 import StartLoginTestButton from '../components/buttons/StartLoginTestButton'
 import LogOutput from '../components/log/LogOutput'
 import KillButton from '../components/buttons/KillButton'
-import UpdateStatus from '../components/UpdateStatus'
 
 export default function Main() {
 	return (
@@ -15,12 +14,6 @@ export default function Main() {
 						<StartUpdateButton className='mx-1 mt-1' />
 						<StartLoginTestButton className='mx-1 mt-1' />
 						<KillButton className='mx-1 mt-1' />
-					</Col>
-				</Row>
-
-				<Row>
-					<Col>
-						<UpdateStatus />
 					</Col>
 				</Row>
 

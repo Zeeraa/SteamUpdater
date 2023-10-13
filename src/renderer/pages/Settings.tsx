@@ -6,6 +6,7 @@ import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
 import SteamappsSelectedResponse from '../../shared/SteamappsSelectedResponse';
 import toast from 'react-hot-toast';
+import ReinstallSteamCMDButton from '../components/buttons/ReinstallSteamCMDButton';
 
 export default function Settings() {
 	const steamUpdater = useSteamUpdater();
@@ -83,6 +84,11 @@ export default function Settings() {
 				<Row>
 					<Col>
 						<Button variant='success' onClick={save}>Save</Button>
+					</Col>
+				</Row>
+				<Row className='mt-4'>
+					<Col>
+						<ReinstallSteamCMDButton />
 					</Col>
 				</Row>
 			</Container>

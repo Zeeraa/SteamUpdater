@@ -23,6 +23,7 @@ import Logger from './logger/Logger';
 import DefaultLogger from './logger/impl/DefaultLogger';
 import { format } from 'date-fns';
 import { ConsoleColor } from '../../shared/ConsoleColor';
+import { Console } from 'console';
 
 export default class SteamUpdater {
 	// Classes
@@ -136,6 +137,10 @@ export default class SteamUpdater {
 						action: IPCAction.BACKEND_GAME_INFO_RESPONSE,
 						data: gameInfoApiResponse
 					});
+					break;
+
+				case IPCAction.FRONTEND_REINSTALL_STEAMCMD:
+					this.reinstallSteamCMD();
 					break;
 
 				case IPCAction.FRONTEND_BEGIN_LOGIN_TEST:
@@ -305,15 +310,30 @@ export default class SteamUpdater {
 
 	async init() {
 		this.updateState();
+		await this.checkIfSteamCMDNeedsToBeInstalled();
+		this.updateState();
+	}
+
+	async reinstallSteamCMD() {
+		if (this.steamcmdManager.uninstall()) {
+			this.logger.logInfo("Uninstalled SteamCMD");
+		}
+		this.updateState();
+		await this.checkIfSteamCMDNeedsToBeInstalled();
+		this.updateState();
+	}
+
+	private async checkIfSteamCMDNeedsToBeInstalled() {
 		if (!this.steamcmdManager.isSteamCMDInstalled()) {
 			try {
+				this.logger.logInfo("Installing SteamCMD...");
 				await this.steamcmdManager.installSteamCMD();
+				this.logger.logInfo("SteamCMD installed successfully!", ConsoleColor.GREEN);
 			} catch (err) {
 				console.error(err);
 				this.logger.logError("Failed to install SteamCMD");
 			}
 		}
-		this.updateState();
 	}
 
 	runUpdate(): Promise<void> {
