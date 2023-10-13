@@ -182,7 +182,6 @@ export default class SteamUpdater {
 							properties: ['openDirectory'],
 						}).then(result => {
 							if (!result.canceled) {
-								const selectedSteamappsPath = result.filePaths[0];
 								const steamappsSelectedResult: SteamappsSelectedResponse = {
 									path: result.filePaths[0]
 								};
