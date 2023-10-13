@@ -10,8 +10,9 @@ interface Props {
 export default function CustomNavLink({children, path}: Props) {
 	const navigate = useNavigate();
 	const location = useLocation();
-	
+
 	function handleClick() {
+		console.log("Navigating to: " + path);
 		navigate(path);
 	}
 

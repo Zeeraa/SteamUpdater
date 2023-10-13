@@ -25,6 +25,7 @@ export default function App() {
 
 	return (
 		<div>
+			{location.pathname}
 			<Nav fill variant="tabs" defaultActiveKey={location.pathname}>
 				<CustomNavLink path='/'>Steam Updater</CustomNavLink>
 				<CustomNavLink path='/accounts'>Accounts</CustomNavLink>
@@ -34,9 +35,6 @@ export default function App() {
 
 			<div>
 				<Routes>
-					{/* Remove index.html from out nav path */}
-					<Route path="/index.html" element={<Navigate to="/" />} />
-
 					{/* All our routes */}
 					<Route path="/" element={<Main />} />
 					<Route path="/accounts" element={<Accounts />} />
