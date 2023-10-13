@@ -417,6 +417,8 @@ export default class SteamUpdater {
 						this.logger.logError("SteamCMD exited with non zero exit code " + exitCode);
 					}
 				}
+
+				this.logger.logInfo("Update completed", ConsoleColor.GREEN);
 			} catch (err) {
 				error = err;
 				this.logger.logError("An exception occured while running update");
