@@ -8,19 +8,30 @@ import ServerToastMessage from "../../shared/toast/ServerToastMessage";
 import { ToastType } from "../../shared/toast/ToastType";
 import LoginTestResponse, { LoginTestResult } from "../../shared/LoginTestResponse";
 import SteamappsSelectedResponse from "../../shared/SteamappsSelectedResponse";
+import SteamUpdaterState, { State } from "../../shared/SteamUpdaterState";
 
 export enum SteamUpdaterFrontendEvent {
 	CONFIG_CHANGED = "configChanged",
 	GAME_LOOKUP_RESULT = "gameLookupResult",
 	STEAMAPPS_FOLDER_SELECTED = "steamappsFolderSelected",
 	CONFIG_SAVED = "configSaved",
+	STATE_UPDATE = "stateUpdate",
 }
 
 export default class SteamUpdaterFrontend {
 	private _config: SteamUpdaterConfig;
+	private _state: SteamUpdaterState;
 	private _events = new EventEmitter();
 
 	constructor() {
+		this._state = {
+			loginTestRunning: false,
+			state: State.READY,
+			steamappsPathError: false,
+			steamcmdInstalled: false,
+			updateStatus: null
+		};
+
 		this._config = {
 			accounts: [],
 			games: [],
@@ -34,6 +45,10 @@ export default class SteamUpdaterFrontend {
 			switch (args.action as IPCAction) {
 				case IPCAction.BACKEND_CONFIG_RESPONSE:
 					this.config = args.data as SteamUpdaterConfig
+					break;
+
+				case IPCAction.BACKEND_CURRENT_STATE:
+					this.state = args.data as SteamUpdaterState
 					break;
 
 				case IPCAction.BACKEND_UPDATE_CONFIG_ACK:
@@ -69,23 +84,23 @@ export default class SteamUpdaterFrontend {
 							toast.success("Login test finished");
 							break;
 
-							case LoginTestResult.ERROR:
-								toast.error("Failed to start login test");
+						case LoginTestResult.ERROR:
+							toast.error("Failed to start login test");
 							break;
 
-							case LoginTestResult.NON_ZERO_EXIT_CODE:
-								toast.error("Login test exited with non zero exit code");
+						case LoginTestResult.NON_ZERO_EXIT_CODE:
+							toast.error("Login test exited with non zero exit code");
 							break;
 
-							default:
+						default:
 							console.error("Invalid login test response: " + loginTestResponse.result);
 							break;
 					}
 					break;
 
-					case IPCAction.BACKEND_STEAMAPPS_SELECTED:
-						this.events.emit(SteamUpdaterFrontendEvent.STEAMAPPS_FOLDER_SELECTED, args.data as SteamappsSelectedResponse);
-						break;
+				case IPCAction.BACKEND_STEAMAPPS_SELECTED:
+					this.events.emit(SteamUpdaterFrontendEvent.STEAMAPPS_FOLDER_SELECTED, args.data as SteamappsSelectedResponse);
+					break;
 
 				default:
 					console.log("Unknown action on ipc-main: " + args.action);
@@ -95,15 +110,28 @@ export default class SteamUpdaterFrontend {
 
 		console.log("Frontend init");
 		this.fetchConfig();
+		this.fetchState();
 	}
 
-	set config(newConfig: SteamUpdaterConfig) {
-		this._config = newConfig;
-		this.events.emit(SteamUpdaterFrontendEvent.CONFIG_CHANGED, this._config);
+	get state() {
+		return this._state;
+	}
+
+	set state(state: SteamUpdaterState) {
+		this._state = state;
+		console.log(state);
+		// TODO: Check if state changed
+		this.events.emit(SteamUpdaterFrontendEvent.STATE_UPDATE, this._state);
 	}
 
 	get config() {
 		return this._config;
+	}
+
+	set config(newConfig: SteamUpdaterConfig) {
+		this._config = newConfig;
+		// TODO: Check if config changed
+		this.events.emit(SteamUpdaterFrontendEvent.CONFIG_CHANGED, this._config);
 	}
 
 	get events() {
@@ -150,6 +178,13 @@ export default class SteamUpdaterFrontend {
 		console.log("Requesting config from server");
 		window.electron.ipcRenderer.sendMessage('ipc-main', {
 			action: IPCAction.FONTEND_REQUEST_CONFIG
+		});
+	}
+
+	fetchState() {
+		console.log("Requesting state from server");
+		window.electron.ipcRenderer.sendMessage('ipc-main', {
+			action: IPCAction.FRONTEND_FORCE_STATE_UPDATE
 		});
 	}
 }

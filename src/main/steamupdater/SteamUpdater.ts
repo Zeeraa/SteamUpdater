@@ -18,6 +18,7 @@ import GenericSymlinkCreator from './steamcmd/impl/GenericSymlinkCreator';
 import SteamappsSelectedResponse from '../../shared/SteamappsSelectedResponse';
 import SteamAccount from '../../shared/SteamAccount';
 import SteamCMDProcess from './steamcmd/SteamCMDProcess';
+import SteamUpdaterState, { State, UpdateStatus } from '../../shared/SteamUpdaterState';
 
 export default class SteamUpdater {
 	// Classes
@@ -31,13 +32,23 @@ export default class SteamUpdater {
 	private configFile: string;
 
 	// State
+	private _state: SteamUpdaterState;
+	private loginTestRunning: boolean;
+	private updateStatus: UpdateStatus | null;
 	private processRunning: boolean;
-	private steamcmdInstalled: boolean;
 	private currentSteamcmdProcess: SteamCMDProcess;
 
 	constructor() {
 		this.mainWindow = null;
 		this.currentSteamcmdProcess = null;
+		this.loginTestRunning = false;
+		this.updateStatus = null;
+		this._state = {
+			state: State.READY,
+			loginTestRunning: false,
+			steamappsPathError: false,
+			steamcmdInstalled: true
+		}
 
 		DataFolder.mkdir();
 		this.dataFolder = DataFolder.get();
@@ -62,7 +73,6 @@ export default class SteamUpdater {
 			this.config = JSON.parse(configFileData) as SteamUpdaterConfig;
 		}
 
-		this.steamcmdInstalled = false;
 		this.symlinkCreator = new GenericSymlinkCreator();
 		if (os.platform() === 'win32') {
 			this.steamcmdManager = new SteamCMDManagerWin();
@@ -81,6 +91,11 @@ export default class SteamUpdater {
 					});
 					break;
 
+					case IPCAction.FRONTEND_FORCE_STATE_UPDATE:
+					console.debug("Client forced state update");
+					this.updateState();
+					break;
+
 				case IPCAction.FONTEND_UPDATE_CONFIG:
 					console.log("Saving config");
 					const newConfig = args.data as SteamUpdaterConfig;
@@ -89,6 +104,7 @@ export default class SteamUpdater {
 					event.reply("ipc-main", {
 						action: IPCAction.BACKEND_UPDATE_CONFIG_ACK
 					});
+					this.updateState();
 					break;
 
 				case IPCAction.FRONTEND_REQUEST_GAME_INFO:
@@ -173,6 +189,62 @@ export default class SteamUpdater {
 		});
 	}
 
+	get state() {
+		return this._state;
+	}
+
+	private set state(state: SteamUpdaterState) {
+		this._state = state;
+		if(this.mainWindow != null) {
+			this.mainWindow.webContents.send("ipc-main", {
+				action: IPCAction.BACKEND_CURRENT_STATE,
+				data: this._state
+			});
+		}
+	}
+
+	updateState() {
+		const steamcmdInstalled = this.steamcmdManager.isSteamCMDInstalled();
+
+		let steamappsPathOk = false;
+		if (this.config.steamPath != null) {
+			if (fs.existsSync(this.config.steamPath)) {
+				steamappsPathOk = true;
+			}
+		}
+
+		let state: State = State.READY;
+
+		let error = false;
+		if (!steamcmdInstalled) {
+			error = true;
+		}
+
+		if (this.loginTestRunning) {
+			state = State.LOGIN_TEST_RUNNING;
+		}
+
+		if (this.updateStatus != null) {
+			state = State.UPDATING;
+		}
+
+		if (!steamappsPathOk) {
+			error = true;
+		}
+
+		if (error) {
+			state = State.ERROR;
+		}
+
+		this.state = {
+			state: state,
+			steamappsPathError: !steamappsPathOk,
+			steamcmdInstalled: steamcmdInstalled,
+			loginTestRunning: this.loginTestRunning,
+			updateStatus: this.updateStatus
+		}
+	}
+
 	sendToast(message: string, type: ToastType = ToastType.SUCCESS) {
 		if (this.mainWindow == null) {
 			return;
@@ -190,17 +262,16 @@ export default class SteamUpdater {
 	}
 
 	async init() {
+		this.updateState();
 		if (!this.steamcmdManager.isSteamCMDInstalled()) {
 			try {
 				await this.steamcmdManager.installSteamCMD();
-				this.steamcmdInstalled = true;
 			} catch (err) {
 				console.error(err);
 				this.logError("Failed to install SteamCMD");
 			}
-		} else {
-			this.steamcmdInstalled = true;
 		}
+		this.updateState();
 	}
 
 	runUpdate(): Promise<void> {
@@ -217,6 +288,14 @@ export default class SteamUpdater {
 
 				for (let i = 0; i < games.length; i++) {
 					const game = games[i];
+
+					this.updateStatus = {
+						currentIndex: i + 1,
+						totalGames: games.length,
+						game: game
+					};
+					this.updateState();
+
 					const directory: string = game.customSteamDirectory == null ? this.config.steamPath : game.customSteamDirectory;
 
 					this.logInfo("Next game to update is " + game.displayName);
@@ -227,7 +306,7 @@ export default class SteamUpdater {
 							fs.rmSync(steamcmdSteamappsPath);
 						}
 						this.logInfo("Creating a link between " + directory + " -> " + steamcmdSteamappsPath);
-						if(fs.existsSync(steamcmdSteamappsPath)) {
+						if (fs.existsSync(steamcmdSteamappsPath)) {
 							this.logInfo("Removing steamapps folder from " + steamcmdSteamappsPath);
 							fs.removeSync(steamcmdSteamappsPath);
 						}
@@ -262,6 +341,8 @@ export default class SteamUpdater {
 			}
 
 			this.processRunning = false;
+			this.updateStatus = null;
+			this.updateState();
 
 			if (currentSymlink != null) {
 				this.logInfo("Removing symlink " + currentSymlink + " -> " + steamcmdSteamappsPath);
@@ -278,16 +359,28 @@ export default class SteamUpdater {
 
 	runLoginTest(): Promise<number> {
 		return new Promise((resolve, reject) => {
+			this.loginTestRunning = true;
+			this.updateState();
 			const accounts = this.config.accounts.filter(a => !a.disabled);
 			let cmdLine = "";
+			for (let i = 0; i < accounts.length; i++) {
+
+			}
 			accounts.forEach(account => {
 				cmdLine += "+login " + account.username + " \"" + account.password + "\" +logout ";
 			});
 			cmdLine += "+exit";
 
 			const process = this.steamcmdManager.runCommandWithTerminal(cmdLine);
-			process.getPromise().then(exitCode => resolve(exitCode)).catch(err => reject(err));
-
+			process.getPromise().then(exitCode => {
+				this.loginTestRunning = false;
+				this.updateState();
+				resolve(exitCode)
+			}).catch(err => {
+				this.loginTestRunning = false;
+				this.updateState();
+				reject(err)
+			});
 		});
 	}
 

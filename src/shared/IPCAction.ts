@@ -1,4 +1,6 @@
 export enum IPCAction {
+	/** Frontend sends this to force backend to send its state */
+	FRONTEND_FORCE_STATE_UPDATE = "client_force_state_update",
 	/** Frontend sends this to backend to request the current config */
 	FONTEND_REQUEST_CONFIG = "client_get_cfg",
 	/** Frontend sends this to update the config stored on the backend */
@@ -11,6 +13,8 @@ export enum IPCAction {
 	FRONTEND_OPEN_STEAMAPPS_PICKER = "client_open_steamapps_picker",
 	/** Sent when the client starts an update */
 	FRONTEND_START_UPDATE = "client_start_update",
+	/** Backend sends state to frontend */
+	BACKEND_CURRENT_STATE = "server_current_state",
 	/** Backend replies to let the frontend know the config was saved */
 	BACKEND_UPDATE_CONFIG_ACK = "server_config_updated",
 	/** Backend responds to frontend with config data */
