@@ -53,7 +53,7 @@ export default function Games() {
 						<Table bordered striped hover>
 							<thead>
 								<tr>
-									<th>AppID</th>
+									<th className='appid-th'>AppID</th>
 									<th>Name</th>
 									<th>Account</th>
 									<th className="t-fit"></th>

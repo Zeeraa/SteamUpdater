@@ -4,6 +4,11 @@ import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { Button, FormCheck, FormSelect, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from 'react-bootstrap';
 import SteamAccountSelectOptions from './SteamAccountSelectOptions';
 
+/// @ts-ignore
+import noBackgroundImage from "../../../assets/null.png";
+
+import "./SteamGameTableEntry.css";
+
 interface Props {
 	steamGame: SteamGame
 }
@@ -73,7 +78,11 @@ export default function SteamGameTableEntry({ steamGame }: Props) {
 	return (
 		<>
 			<tr>
-				<td>{steamGame.appId}</td>
+				<td className='steam-game-appid-field' style={{ backgroundImage: 'url("' + (steamGame.thumbnail == null ? noBackgroundImage : steamGame.thumbnail) + '")' }}>
+					<span className='appid-inner'>
+						<span>{steamGame.appId}</span>
+					</span>
+				</td>
 				<td>{steamGame.displayName}</td>
 				<td>
 					<FormSelect onChange={handleAccountChange} value={steamGame.accountId == null ? "" : steamGame.accountId}>
