@@ -1,11 +1,13 @@
 import React, { useState } from 'react'
-import {AiOutlineEye, AiOutlineEyeInvisible} from 'react-icons/ai'
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai'
+
+import "./HiddenPasswordSpan.css";
 
 interface Props {
 	password: string;
 }
 
-export default function HiddenPasswordSpan({password}: Props) {
+export default function HiddenPasswordSpan({ password }: Props) {
 	const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
 
 	function maskPassword(password: string): string {
@@ -19,8 +21,8 @@ export default function HiddenPasswordSpan({password}: Props) {
 	return (
 		<span>
 			<span>{passwordVisible ? password : maskPassword(password)}</span>
-			<span onClick={toggle}>{passwordVisible ? <AiOutlineEyeInvisible/> : <AiOutlineEye/>}</span>
+			<span className='hidden-password-toggle' onClick={toggle}>{passwordVisible ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}</span>
 		</span>
 	)
-	
+
 }

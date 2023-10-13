@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 import './App.css';
 
-import 'bootstrap/dist/css/bootstrap.min.css';
+import '../../assets/bootstrap.css';
 import Main from './pages/Main';
 import Accounts from './pages/Accounts';
 import Games from './pages/Games';
@@ -11,6 +11,7 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import { Nav } from 'react-bootstrap';
 import CustomNavLink from './components/CustomNavLink';
+import { Toaster } from 'react-hot-toast';
 
 export default function App() {
 	const location = useLocation();
@@ -36,9 +37,11 @@ export default function App() {
 					<Route path="/settings" element={<Settings />} />
 
 					{/* Error page */}
-					<Route path="*" element={<NotFound/>} />
+					<Route path="*" element={<NotFound />} />
 				</Routes>
 			</div>
+
+			<Toaster />
 		</div>
 	);
 }

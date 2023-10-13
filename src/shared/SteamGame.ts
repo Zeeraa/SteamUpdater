@@ -4,5 +4,6 @@ export default interface SteamGame {
 	displayName: string;
 	accountId?: string;
 	customSteamDirectory?: string;
+	thumbnail?: string;
 	disabled: boolean;
 }
