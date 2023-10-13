@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
 import SteamAccount from '../../shared/SteamAccount';
+import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
 
 export default function SteamAccountSelectOptions() {
 	const steamUpdater = useSteamUpdater();
@@ -11,9 +12,9 @@ export default function SteamAccountSelectOptions() {
 		const handleConfigChange = (newConfig: SteamUpdaterConfig) => {
 			setAccounts(newConfig.accounts);
 		}
-		steamUpdater.events.on('configChanged', handleConfigChange);
+		steamUpdater.events.on(SteamUpdaterFrontendEvent.CONFIG_CHANGED, handleConfigChange);
 		return () => {
-			steamUpdater.events.off('configChanged', handleConfigChange);
+			steamUpdater.events.off(SteamUpdaterFrontendEvent.CONFIG_CHANGED, handleConfigChange);
 		};
 	}, []);
 

@@ -6,14 +6,14 @@ interface Props {
 	className?: string
 }
 
-export default function StartLoginTestButton({ className }: Props) {
+export default function StartUpdateButton({ className }: Props) {
 	const steamUpdater = useSteamUpdater();
 
-	function triggerLoginTest() {
-		steamUpdater.triggerLoginTest();
+	function triggerUpdate() {
+		steamUpdater.startUpdate();
 	}
 
 	return (
-		<Button variant='info' className={className} onClick={triggerLoginTest}>Test logins</Button>
+		<Button variant='primary' className={className} onClick={triggerUpdate}>Run update</Button>
 	)
 }

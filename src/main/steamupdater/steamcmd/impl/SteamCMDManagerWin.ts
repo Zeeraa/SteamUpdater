@@ -29,7 +29,7 @@ export default class SteamCMDManagerWin extends SteamCMDManager {
 	isSteamCMDInstalled(): boolean {
 		return fs.existsSync(this.steamcmdExecutable);
 	}
-	
+
 	installSteamCMD(): Promise<void> {
 		return new Promise(async (resolve, reject) => {
 			try {
@@ -42,14 +42,14 @@ export default class SteamCMDManagerWin extends SteamCMDManager {
 
 				console.log("Downloading zip file from " + SteamCMDManagerWin.STEAMCMD_URL_WIN) + "...";
 				const response = await axios.get(SteamCMDManagerWin.STEAMCMD_URL_WIN, { responseType: 'arraybuffer' });
-				
-				
+
+
 				const zipFilePath = path.join(this.steamcmdFolder, 'steamcmd.zip');
 				if(fs.existsSync(zipFilePath)) {
 					console.log("Removing old steamcmd.zip file...");
 					fs.removeSync(zipFilePath);
 				}
-				
+
 				console.log("Writing zip file to disk...");
 				await fs.writeFile(zipFilePath, response.data);
 
@@ -76,9 +76,17 @@ export default class SteamCMDManagerWin extends SteamCMDManager {
 		console.log("Starting SteamCMD");
 		return new SteamCMDProcessWin(this.steamcmdFolder, this.steamcmdExecutable, command, false, stdout, stderr);
 	}
-	
+
 	runCommandWithTerminal(command: string): SteamCMDProcess {
 		console.log("Starting SteamCMD with terminal");
 		return new SteamCMDProcessWin(this.steamcmdFolder, this.steamcmdExecutable, command, true);
+	}
+
+	getSteamCMDExecutable(): string {
+		return this.steamcmdExecutable;
+	}
+
+	getSteamCMDFolder(): string {
+		return this.steamcmdFolder;
 	}
 }

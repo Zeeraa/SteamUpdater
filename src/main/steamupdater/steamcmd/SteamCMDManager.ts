@@ -7,6 +7,10 @@ export default abstract class SteamCMDManager {
 	abstract installSteamCMD(): Promise<void>;
 
 	abstract runCommand(command: string, stdout: Consumer<string>, stderr: Consumer<string>): SteamCMDProcess
-	
+
 	abstract runCommandWithTerminal(command: string): SteamCMDProcess
+
+	abstract getSteamCMDExecutable(): string;
+
+	abstract getSteamCMDFolder(): string;
 }

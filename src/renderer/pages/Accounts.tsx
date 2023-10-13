@@ -7,6 +7,8 @@ import "../table_fit.css";
 import SteamAccount from '../../shared/SteamAccount';
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
 import StartLoginTestButton from '../components/StartLoginTestButton';
+import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
+import StartUpdateButton from '../components/StartUpdateButton';
 
 export default function Accounts() {
 	const steamUpdater = useSteamUpdater();
@@ -16,9 +18,9 @@ export default function Accounts() {
 		const handleConfigChange = (newConfig: SteamUpdaterConfig) => {
 			setAccounts(newConfig.accounts);
 		}
-		steamUpdater.events.on('configChanged', handleConfigChange);
+		steamUpdater.events.on(SteamUpdaterFrontendEvent.CONFIG_CHANGED, handleConfigChange);
 		return () => {
-			steamUpdater.events.off('configChanged', handleConfigChange);
+			steamUpdater.events.off(SteamUpdaterFrontendEvent.CONFIG_CHANGED, handleConfigChange);
 		};
 	}, []);
 
@@ -53,7 +55,7 @@ export default function Accounts() {
 
 				<Row className='mt-2'>
 					<Col>
-						<StartLoginTestButton/>
+						<StartLoginTestButton />
 					</Col>
 				</Row>
 			</Container>

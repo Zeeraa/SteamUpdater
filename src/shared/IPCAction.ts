@@ -7,6 +7,10 @@ export enum IPCAction {
 	FRONTEND_REQUEST_GAME_INFO = "client_appid_lookup",
 	/** Sent when the frontend begins a login test */
 	FRONTEND_BEGIN_LOGIN_TEST = "client_trigger_login_test",
+	/** Sent when the frontend opens the steamapps picker dialog */
+	FRONTEND_OPEN_STEAMAPPS_PICKER = "client_open_steamapps_picker",
+	/** Sent when the client starts an update */
+	FRONTEND_START_UPDATE = "client_start_update",
 	/** Backend replies to let the frontend know the config was saved */
 	BACKEND_UPDATE_CONFIG_ACK = "server_config_updated",
 	/** Backend responds to frontend with config data */
@@ -16,5 +20,7 @@ export enum IPCAction {
 	/** Backend responds with login request result */
 	BACKEND_LOGIN_REQUEST_RESULT = "server_login_test_result",
 	/** Backend sends a toast message to the frontend */
-	BACKEND_SEND_TOAST_MESSAGE = "server_send_toast_message"
+	BACKEND_SEND_TOAST_MESSAGE = "server_send_toast_message",
+	/** Backend sends the selected steamapps directory */
+	BACKEND_STEAMAPPS_SELECTED = "server_steamapps_selected"
 }

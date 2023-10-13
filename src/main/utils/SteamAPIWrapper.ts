@@ -1,7 +1,6 @@
 import axios from "axios";
 import { SteamGameLookupError, SteamGameLookupResult } from "../../shared/SteamGameLookup";
 import SteamAPIGameData from "../../shared/SteamAPI/SteamAPIGameData";
-import { app } from "electron";
 
 export default class SteamAPIWrapper {
 	static async lookupSteamGame(appId: number): Promise<SteamGameLookupResult> {
