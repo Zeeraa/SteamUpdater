@@ -9,6 +9,7 @@ import { WebglAddon } from 'xterm-addon-webgl';
 import "xterm/css/xterm.css";
 import { LogType } from '../../../shared/LogType';
 import { ConsoleColor } from '../../../shared/ConsoleColor';
+import toast from 'react-hot-toast';
 
 interface Props {
 	className?: string;
@@ -94,9 +95,15 @@ export default function LogOutput({ className }: Props) {
 		updateSize();
 
 		return () => {
+			try {
 			fit.dispose();
 			webgl.dispose();
 			terminal.dispose();
+			} catch(err) {
+				console.error("An error occured while disposing xterm");
+				console.error(err);
+				toast.error("An internal error occured while closing log window");
+			}
 			steamUpdater.events.off(SteamUpdaterFrontendEvent.LOGS_FETCHED, handleLogs);
 			steamUpdater.events.off(SteamUpdaterFrontendEvent.LOG_MESSAGE, handleLog);
 			window.removeEventListener('resize', updateSize);
