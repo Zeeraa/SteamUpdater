@@ -23,7 +23,6 @@ import Logger from './logger/Logger';
 import DefaultLogger from './logger/impl/DefaultLogger';
 import { format } from 'date-fns';
 import { ConsoleColor } from '../../shared/ConsoleColor';
-import { Console } from 'console';
 import SteamGame from '../../shared/SteamGame';
 
 export default class SteamUpdater {
@@ -45,6 +44,9 @@ export default class SteamUpdater {
 	private processRunning: boolean;
 	private currentSteamcmdProcess: SteamCMDProcess;
 	private updateKilled: boolean;
+	private updateStartedAt: string;
+	private gameUpdateStartedAt: string;
+
 
 	constructor() {
 		this.mainWindow = null;
@@ -52,11 +54,15 @@ export default class SteamUpdater {
 		this.loginTestRunning = false;
 		this.updateStatus = null;
 		this.updateKilled = false;
+		this.updateStartedAt = "1970-01-01 00:00:00";
+		this.gameUpdateStartedAt = "1970-01-01 00:00:00";
 		this._state = {
 			state: State.READY,
 			loginTestRunning: false,
 			steamappsPathError: false,
-			steamcmdInstalled: true
+			steamcmdInstalled: true,
+			updateStartedAt: this.updateStartedAt,
+			gameUpdateStartedAt: this.gameUpdateStartedAt
 		}
 
 		DataFolder.mkdir();
@@ -223,6 +229,14 @@ export default class SteamUpdater {
 		});
 	}
 
+	private updateStartedAtTime(): void {
+		this.updateStartedAt = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+	}
+
+	private updateGameStartedAtTime(): void {
+		this.gameUpdateStartedAt = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+	}
+
 	get logger(): Logger {
 		return this._logger;
 	}
@@ -288,7 +302,9 @@ export default class SteamUpdater {
 			steamappsPathError: !steamappsPathOk,
 			steamcmdInstalled: steamcmdInstalled,
 			loginTestRunning: this.loginTestRunning,
-			updateStatus: this.updateStatus
+			updateStatus: this.updateStatus,
+			updateStartedAt: this.updateStartedAt,
+			gameUpdateStartedAt: this.gameUpdateStartedAt
 		}
 	}
 
@@ -337,6 +353,8 @@ export default class SteamUpdater {
 	}
 
 	runUpdate(): Promise<void> {
+		this.updateStartedAtTime();
+		this.updateGameStartedAtTime();
 		return new Promise(async (resolve, reject) => {
 			this.updateKilled = false;
 			this.processRunning = true;
@@ -374,6 +392,7 @@ export default class SteamUpdater {
 						totalGames: games.length,
 						game: game
 					};
+					this.updateGameStartedAtTime();
 					this.updateState();
 
 					const directory: string = game.customSteamDirectory == null ? this.config.steamPath : game.customSteamDirectory;

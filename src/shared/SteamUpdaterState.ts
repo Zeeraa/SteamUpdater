@@ -7,6 +7,8 @@ export default interface SteamUpdaterState {
 	updateStatus?: UpdateStatus;
 	steamcmdInstalled: boolean;
 	steamappsPathError: boolean;
+	updateStartedAt: string;
+	gameUpdateStartedAt: string;
 }
 
 export interface UpdateStatus {

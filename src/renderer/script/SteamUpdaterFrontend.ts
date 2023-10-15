@@ -35,7 +35,9 @@ export default class SteamUpdaterFrontend {
 			state: State.READY,
 			steamappsPathError: false,
 			steamcmdInstalled: false,
-			updateStatus: null
+			updateStatus: null,
+			updateStartedAt: "1970-01-01 00:00:00",
+			gameUpdateStartedAt: "1970-01-01 00:00:00"
 		};
 
 		this._config = {

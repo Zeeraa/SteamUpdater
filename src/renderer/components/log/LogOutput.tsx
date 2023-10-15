@@ -94,14 +94,17 @@ export default function LogOutput({ className }: Props) {
 		updateSize();
 
 		return () => {
-			console.log("Disposing XTerm");
-			fit.dispose();
-			webgl.dispose();
-			terminal.dispose();
-			console.log("XTerm disposed");
 			steamUpdater.events.off(SteamUpdaterFrontendEvent.LOGS_FETCHED, handleLogs);
 			steamUpdater.events.off(SteamUpdaterFrontendEvent.LOG_MESSAGE, handleLog);
 			window.removeEventListener('resize', updateSize);
+			console.log("Disposing XTerm (early)");
+			fit.dispose();
+			webgl.dispose();
+			setTimeout(() => {
+				console.log("Disposing XTerm (delayed)");
+				//terminal.dispose();
+				console.log("XTerm disposed");
+			}, 500);
 		}
 	}, []);
 
