@@ -4,11 +4,11 @@ import { AiFillFolder } from "react-icons/ai";
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
-import SteamappsSelectedResponse from '../../shared/SteamappsSelectedResponse';
+import SteamappsSelectedResponse from '../../shared/dto/SteamappsSelectedResponse';
 import toast from 'react-hot-toast';
 import ReinstallSteamCMDButton from '../components/buttons/ReinstallSteamCMDButton';
 import { config } from 'process';
-import { SteamUpdaterMode } from '../../shared/SteamUpdaterMode';
+import { SteamUpdaterMode } from '../../shared/config/SteamUpdaterMode';
 
 export default function Settings() {
 	const steamUpdater = useSteamUpdater();

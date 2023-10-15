@@ -1,4 +1,4 @@
-import { ConsoleColor } from "./ConsoleColor";
+import { ConsoleColor } from "../../ConsoleColor";
 import { LogType } from "./LogType";
 
 export default interface LogMessage {

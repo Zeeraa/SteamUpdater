@@ -1,8 +1,8 @@
 import * as fs from 'fs';
 import Logger from '../Logger';
 import SteamUpdater from '../../SteamUpdater';
-import { LogType } from '../../../../shared/LogType';
-import LogMessage from '../../../../shared/LogMessage';
+import { LogType } from '../../../../shared/dto/log/LogType';
+import LogMessage from '../../../../shared/dto/log/LogMessage';
 import { IPCAction } from '../../../../shared/IPCAction';
 import { ConsoleColor } from '../../../../shared/ConsoleColor';
 

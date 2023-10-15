@@ -23,4 +23,18 @@ export default class DateUtils {
 
 		return formattedParts.join(' ');
 	}
+
+	static isTimeInPast(timeString: string): boolean {
+		const currentTime = new Date();
+		const [hours, minutes, seconds] = timeString.split(":").map(Number);
+
+		const targetTime = new Date();
+		targetTime.setHours(hours, minutes, seconds, 0);
+
+		return currentTime.getTime() > targetTime.getTime();
+	}
+
+	static getDayNumber(): number {
+		return new Date().getDay();
+	}
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
-import SteamGame from '../../shared/SteamGame';
+import SteamGame from '../../shared/config/SteamGame';
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
 import { Button, Col, Container, Row, Table } from 'react-bootstrap';

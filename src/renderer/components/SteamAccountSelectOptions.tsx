@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
-import SteamAccount from '../../shared/SteamAccount';
+import SteamAccount from '../../shared/config/SteamAccount';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
 
 export default function SteamAccountSelectOptions() {

@@ -1,4 +1,4 @@
-import SteamAPIGameData from "./SteamAPI/SteamAPIGameData";
+import SteamAPIGameData from "../SteamAPI/SteamAPIGameData";
 
 export interface SteamGameLookupRequest {
 	appId: number

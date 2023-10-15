@@ -1,19 +1,20 @@
 import React, { useEffect, useState } from 'react'
 import { Col, Container, Modal, ModalBody, ModalDialog, ModalFooter, ModalHeader, ModalTitle, ProgressBar, Row } from 'react-bootstrap'
-import { useSteamUpdater } from '../context/SteamUpdaterContext';
-import SteamUpdaterState, { State } from '../../shared/SteamUpdaterState';
-import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
-import SteamAPIGameData from '../../shared/SteamAPI/SteamAPIGameData';
-import { SteamGameLookupResult } from '../../shared/SteamGameLookup';
+import { useSteamUpdater } from '../../context/SteamUpdaterContext';
+import SteamUpdaterState, { State } from '../../../shared/SteamUpdaterState';
+import { SteamUpdaterFrontendEvent } from '../../script/SteamUpdaterFrontend';
+import SteamAPIGameData from '../../../shared/SteamAPI/SteamAPIGameData';
+import { SteamGameLookupResult } from '../../../shared/dto/SteamGameLookup';
+import KillButton from '../buttons/KillButton';
+import LogOutput from '../log/LogOutput';
+import UpdateTimer from '../UpdateTimer';
+import GameTimer from '../GameTimer';
 
 /// @ts-ignore
-import gamePlaceholderImage from "../../../assets/game_header_placeholder.png";
+import gamePlaceholderImage from "../../../../assets/game_header_placeholder.png";
 
 import "./UpdateStatus.css";
-import KillButton from './buttons/KillButton';
-import LogOutput from './log/LogOutput';
-import UpdateTimer from './UpdateTimer';
-import GameTimer from './GameTimer';
+
 
 export default function UpdateStatus() {
 	const steamUpdater = useSteamUpdater();

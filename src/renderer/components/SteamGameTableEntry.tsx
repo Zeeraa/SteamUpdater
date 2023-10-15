@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import SteamGame from '../../shared/SteamGame'
+import SteamGame from '../../shared/config/SteamGame'
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { Button, FormCheck, FormSelect, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from 'react-bootstrap';
 import SteamAccountSelectOptions from './SteamAccountSelectOptions';

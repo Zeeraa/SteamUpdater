@@ -5,26 +5,27 @@ import SteamCMDManager from "./steamcmd/SteamCMDManager";
 import SteamCMDManagerWin from './steamcmd/impl/SteamCMDManagerWin';
 import DataFolder from '../utils/DataFolder';
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
-import { SteamUpdaterMode } from '../../shared/SteamUpdaterMode';
+import { SteamUpdaterMode } from '../../shared/config/SteamUpdaterMode';
 import { ipcMain, dialog } from 'electron';
 import { IPCAction } from '../../shared/IPCAction';
-import { SteamGameLookupRequest } from '../../shared/SteamGameLookup';
+import { SteamGameLookupRequest } from '../../shared/dto/SteamGameLookup';
 import SteamAPIWrapper from '../utils/SteamAPIWrapper';
-import LoginTestResponse, { LoginTestResult } from '../../shared/LoginTestResponse';
-import { ToastType } from '../../shared/toast/ToastType';
-import ServerToastMessage from '../../shared/toast/ServerToastMessage';
+import LoginTestResponse, { LoginTestResult } from '../../shared/dto/LoginTestResponse';
+import { ToastType } from '../../shared/dto/toast/ToastType';
+import ServerToastMessage from '../../shared/dto/toast/ServerToastMessage';
 import SymlinkCreator, { SymlinkType } from './steamcmd/SymlinkCreator';
 import GenericSymlinkCreator from './steamcmd/impl/GenericSymlinkCreator';
-import SteamappsSelectedResponse from '../../shared/SteamappsSelectedResponse';
-import SteamAccount from '../../shared/SteamAccount';
+import SteamappsSelectedResponse from '../../shared/dto/SteamappsSelectedResponse';
+import SteamAccount from '../../shared/config/SteamAccount';
 import SteamCMDProcess from './steamcmd/SteamCMDProcess';
 import SteamUpdaterState, { State, UpdateStatus } from '../../shared/SteamUpdaterState';
 import Logger from './logger/Logger';
 import DefaultLogger from './logger/impl/DefaultLogger';
 import { format } from 'date-fns';
 import { ConsoleColor } from '../../shared/ConsoleColor';
-import SteamGame from '../../shared/SteamGame';
+import SteamGame from '../../shared/config/SteamGame';
 import OSUtils from './os/OSUtils';
+import DateUtils from '../../shared/utils/DateUtils';
 
 export default class SteamUpdater {
 	// Classes
@@ -34,7 +35,7 @@ export default class SteamUpdater {
 	public _logger: DefaultLogger;
 
 	// Config and data files
-	private config: SteamUpdaterConfig;
+	private _config: SteamUpdaterConfig;
 	private dataFolder: string;
 	private configFile: string;
 
@@ -47,7 +48,10 @@ export default class SteamUpdater {
 	private updateKilled: boolean;
 	private updateStartedAt: string;
 	private gameUpdateStartedAt: string;
+	private lastScheduledUpdateRunDay: number;
 
+	// Intervals
+	private autoStartTimer: NodeJS.Timeout;
 
 	constructor() {
 		this.mainWindow = null;
@@ -63,7 +67,9 @@ export default class SteamUpdater {
 			steamappsPathError: false,
 			steamcmdInstalled: true,
 			updateStartedAt: this.updateStartedAt,
-			gameUpdateStartedAt: this.gameUpdateStartedAt
+			gameUpdateStartedAt: this.gameUpdateStartedAt,
+			autoStartPending: false,
+			autoStartTimeLeftSeconds: 0
 		}
 
 		DataFolder.mkdir();
@@ -134,6 +140,15 @@ export default class SteamUpdater {
 						action: IPCAction.BACKEND_UPDATE_CONFIG_ACK
 					});
 					this.updateState();
+					break;
+
+				case IPCAction.FRONTEND_CANCEL_AUTOUPDATE_TIMER:
+					if (this._state.autoStartPending) {
+						this._state.autoStartPending = false;
+						this.updateState();
+						this.logger.logInfo("Auto update timer canceled by user");
+					}
+
 					break;
 
 				case IPCAction.FRONTEND_REQUEST_GAME_INFO:
@@ -228,6 +243,49 @@ export default class SteamUpdater {
 					break;
 			}
 		});
+
+		if (this.config.mode == SteamUpdaterMode.AUTO) {
+			if (this.state.state == State.READY) {
+				this.state.autoStartTimeLeftSeconds = 10;
+				this.state.autoStartPending = true;
+			} else {
+				this.logger.logError("Cant start auto update since we are not in a ready state. Fix any config errors and relaunch to start auto update");
+			}
+		}
+
+		if (this._state.autoStartPending) {
+			this.autoStartTimer = setInterval(() => {
+				if (this._state.autoStartPending != true) {
+					clearInterval(this.autoStartTimer);
+					return;
+				}
+
+				if (this._state.autoStartTimeLeftSeconds <= 0) {
+					this._state.autoStartPending = false;
+					this.updateState();
+					this.runUpdate();
+					return;
+				}
+				this._state.autoStartTimeLeftSeconds = this._state.autoStartTimeLeftSeconds - 1;
+				this.updateState();
+			}, 1000);
+		}
+
+		setInterval(() => {
+			if (this.config.mode == SteamUpdaterMode.SCHEDULED) {
+				if (this.lastScheduledUpdateRunDay != DateUtils.getDayNumber()) {
+					if (DateUtils.isTimeInPast(this.config.scheduledUpdateTime)) {
+						this.lastScheduledUpdateRunDay = DateUtils.getDayNumber();
+						if (this.state.state == State.READY) {
+							this.logger.logInfo("Scheduled update started at " + format(new Date(), 'yyyy-MM-dd HH:mm:ss'));
+							this.runUpdate();
+						} else {
+							this.logger.logError("Could not start scheduled update since we are not in a ready state");
+						}
+					}
+				}
+			}
+		}, 1000);
 	}
 
 	private updateStartedAtTime(): void {
@@ -236,6 +294,19 @@ export default class SteamUpdater {
 
 	private updateGameStartedAtTime(): void {
 		this.gameUpdateStartedAt = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+	}
+
+	get config(): SteamUpdaterConfig {
+		return this._config;
+	}
+
+	set config(config: SteamUpdaterConfig) {
+		this._config = config;
+		if (DateUtils.isTimeInPast(this.config.scheduledUpdateTime)) {
+			this.lastScheduledUpdateRunDay = DateUtils.getDayNumber();
+		} else {
+			this.lastScheduledUpdateRunDay = -1;
+		}
 	}
 
 	get logger(): Logger {
@@ -299,6 +370,7 @@ export default class SteamUpdater {
 		}
 
 		this.state = {
+			...this._state,
 			state: state,
 			steamappsPathError: !steamappsPathOk,
 			steamcmdInstalled: steamcmdInstalled,

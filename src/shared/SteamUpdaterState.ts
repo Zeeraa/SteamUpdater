@@ -1,5 +1,5 @@
-import SteamAccount from "./SteamAccount";
-import SteamGame from "./SteamGame";
+import SteamAccount from "./config/SteamAccount";
+import SteamGame from "./config/SteamGame";
 
 export default interface SteamUpdaterState {
 	state: State;
@@ -9,6 +9,8 @@ export default interface SteamUpdaterState {
 	steamappsPathError: boolean;
 	updateStartedAt: string;
 	gameUpdateStartedAt: string;
+	autoStartPending: boolean;
+	autoStartTimeLeftSeconds: number;
 }
 
 export interface UpdateStatus {

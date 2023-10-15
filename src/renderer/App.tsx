@@ -13,8 +13,9 @@ import { Nav } from 'react-bootstrap';
 import CustomNavLink from './components/CustomNavLink';
 import { Toaster } from 'react-hot-toast';
 import { useSteamUpdater } from './context/SteamUpdaterContext';
-import UpdateStatus from './components/UpdateStatus';
+import UpdateStatus from './components/popups/UpdateStatus';
 import ErrorNotification from './components/ErrorNotification';
+import UpdatePending from './components/popups/UpdatePending';
 
 export default function App() {
 	const steamUpdater = useSteamUpdater();
@@ -34,7 +35,7 @@ export default function App() {
 				<CustomNavLink path='/settings'>Settings</CustomNavLink>
 			</Nav>
 
-			<ErrorNotification/>
+			<ErrorNotification />
 
 			<div>
 				<Routes>
@@ -50,6 +51,7 @@ export default function App() {
 			</div>
 
 			<UpdateStatus />
+			<UpdatePending />
 			<Toaster />
 		</div>
 	);

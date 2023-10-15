@@ -1,5 +1,5 @@
 import React, { ChangeEvent, ChangeEventHandler, useState } from 'react'
-import SteamAccount from '../../shared/SteamAccount'
+import SteamAccount from '../../shared/config/SteamAccount'
 import { Button, Col, Container, FormCheck, FormControl, FormLabel, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Row } from 'react-bootstrap'
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import HiddenPasswordSpan from './password/HiddenPasswordSpan';

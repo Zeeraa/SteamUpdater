@@ -4,7 +4,7 @@ import { Col, Container, Row, Table } from 'react-bootstrap';
 import { SteamAccountTableEntry } from '../components/SteamAccountTableEntry';
 
 import "../table_fit.css";
-import SteamAccount from '../../shared/SteamAccount';
+import SteamAccount from '../../shared/config/SteamAccount';
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
 import StartLoginTestButton from '../components/buttons/StartLoginTestButton';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';

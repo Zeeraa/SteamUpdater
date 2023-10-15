@@ -1,15 +1,15 @@
 import EventEmitter from "events";
 import { IPCAction } from "../../shared/IPCAction";
 import { SteamUpdaterConfig } from "../../shared/SteamUpdaterConfig";
-import { SteamUpdaterMode } from "../../shared/SteamUpdaterMode";
-import { SteamGameLookupRequest, SteamGameLookupResult } from "../../shared/SteamGameLookup";
+import { SteamUpdaterMode } from "../../shared/config/SteamUpdaterMode";
+import { SteamGameLookupRequest, SteamGameLookupResult } from "../../shared/dto/SteamGameLookup";
 import toast from 'react-hot-toast';
-import ServerToastMessage from "../../shared/toast/ServerToastMessage";
-import { ToastType } from "../../shared/toast/ToastType";
-import LoginTestResponse, { LoginTestResult } from "../../shared/LoginTestResponse";
-import SteamappsSelectedResponse from "../../shared/SteamappsSelectedResponse";
+import ServerToastMessage from "../../shared/dto/toast/ServerToastMessage";
+import { ToastType } from "../../shared/dto/toast/ToastType";
+import LoginTestResponse, { LoginTestResult } from "../../shared/dto/LoginTestResponse";
+import SteamappsSelectedResponse from "../../shared/dto/SteamappsSelectedResponse";
 import SteamUpdaterState, { State } from "../../shared/SteamUpdaterState";
-import LogMessage from "../../shared/LogMessage";
+import LogMessage from "../../shared/dto/log/LogMessage";
 
 export enum SteamUpdaterFrontendEvent {
 	CONFIG_CHANGED = "configChanged",
@@ -37,7 +37,9 @@ export default class SteamUpdaterFrontend {
 			steamcmdInstalled: false,
 			updateStatus: null,
 			updateStartedAt: "1970-01-01 00:00:00",
-			gameUpdateStartedAt: "1970-01-01 00:00:00"
+			gameUpdateStartedAt: "1970-01-01 00:00:00",
+			autoStartPending: false,
+			autoStartTimeLeftSeconds: 0
 		};
 
 		this._config = {
@@ -160,7 +162,6 @@ export default class SteamUpdaterFrontend {
 	set state(newState: SteamUpdaterState) {
 		this._state = newState;
 		console.log(newState);
-		// TODO: Check if state changed
 		this.events.emit(SteamUpdaterFrontendEvent.STATE_UPDATE, newState);
 	}
 
@@ -170,7 +171,6 @@ export default class SteamUpdaterFrontend {
 
 	set config(newConfig: SteamUpdaterConfig) {
 		this._config = newConfig;
-		// TODO: Check if config changed
 		this.events.emit(SteamUpdaterFrontendEvent.CONFIG_CHANGED, newConfig);
 	}
 
@@ -245,6 +245,12 @@ export default class SteamUpdaterFrontend {
 	fetchInitialLogs() {
 		window.electron.ipcRenderer.sendMessage('ipc-main', {
 			action: IPCAction.FRONTEND_REQUEST_LOGS
+		});
+	}
+
+	cancelAutoStart() {
+		window.electron.ipcRenderer.sendMessage('ipc-main', {
+			action: IPCAction.FRONTEND_CANCEL_AUTOUPDATE_TIMER,
 		});
 	}
 }

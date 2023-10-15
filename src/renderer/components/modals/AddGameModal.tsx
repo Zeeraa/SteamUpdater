@@ -1,11 +1,11 @@
 import React, { ChangeEvent, useEffect, useState } from 'react'
 import { useSteamUpdater } from '../../context/SteamUpdaterContext';
 import { SteamUpdaterFrontendEvent } from '../../script/SteamUpdaterFrontend';
-import { SteamGameLookupError, SteamGameLookupResult } from '../../../shared/SteamGameLookup';
+import { SteamGameLookupError, SteamGameLookupResult } from '../../../shared/dto/SteamGameLookup';
 import { Button, Col, Container, FormControl, FormLabel, FormSelect, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Ratio, Row } from 'react-bootstrap';
 import { BsSearch } from 'react-icons/bs';
 import SteamAccountSelectOptions from '../SteamAccountSelectOptions';
-import SteamGame from '../../../shared/SteamGame';
+import SteamGame from '../../../shared/config/SteamGame';
 import toast from 'react-hot-toast';
 import UUID from '../../../shared/utils/UUID';
 

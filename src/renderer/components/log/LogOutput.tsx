@@ -2,12 +2,12 @@ import React, { useEffect, useRef } from 'react'
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { useSteamUpdater } from '../../context/SteamUpdaterContext';
-import LogMessage from '../../../shared/LogMessage';
+import LogMessage from '../../../shared/dto/log/LogMessage';
 import { SteamUpdaterFrontendEvent } from '../../script/SteamUpdaterFrontend';
 import { WebglAddon } from 'xterm-addon-webgl';
 
 import "xterm/css/xterm.css";
-import { LogType } from '../../../shared/LogType';
+import { LogType } from '../../../shared/dto/log/LogType';
 import { ConsoleColor } from '../../../shared/ConsoleColor';
 
 interface Props {
