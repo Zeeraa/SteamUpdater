@@ -48,7 +48,12 @@ export default class SteamUpdaterFrontend {
 			mode: SteamUpdaterMode.MANUAL,
 			scheduledUpdateTime: "00:00",
 			shutdownOnFinish: false,
-			steamPath: ""
+			steamPath: "",
+			discordWebhookConfig: {
+				enabled: false,
+				pings: "@everyone",
+				webhook: ""
+			}
 		};
 
 		window.electron.ipcRenderer.on("ipc-main", (args: any) => {

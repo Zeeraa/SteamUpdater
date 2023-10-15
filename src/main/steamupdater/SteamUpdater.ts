@@ -94,7 +94,12 @@ export default class SteamUpdater {
 				mode: SteamUpdaterMode.MANUAL,
 				scheduledUpdateTime: "00:00:00",
 				shutdownOnFinish: false,
-				steamPath: null
+				steamPath: null,
+				discordWebhookConfig: {
+					enabled: false,
+					pings: "@everyone",
+					webhook: ""
+				}
 			};
 			this.saveConfig();
 		} else {
