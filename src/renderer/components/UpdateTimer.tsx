@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { parse } from 'date-fns';
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
-import SteamUpdaterState from '../../shared/SteamUpdaterState';
-import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
 import DateUtils from '../../shared/utils/DateUtils';
 
 export default function UpdateTimer() {

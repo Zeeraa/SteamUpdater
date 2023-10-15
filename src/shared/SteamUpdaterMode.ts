@@ -1,3 +1,5 @@
 export enum SteamUpdaterMode {
-	MANUAL, SCHEDULED, AUTO
+	MANUAL = "manual",
+	SCHEDULED = "sceduled",
+	AUTO = "auto"
 }

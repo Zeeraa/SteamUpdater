@@ -24,6 +24,7 @@ import DefaultLogger from './logger/impl/DefaultLogger';
 import { format } from 'date-fns';
 import { ConsoleColor } from '../../shared/ConsoleColor';
 import SteamGame from '../../shared/SteamGame';
+import OSUtils from './os/OSUtils';
 
 export default class SteamUpdater {
 	// Classes
@@ -455,6 +456,21 @@ export default class SteamUpdater {
 
 			if (error) {
 				reject(error);
+			}
+
+			if (this.config.shutdownOnFinish) {
+				if (!this.updateKilled) {
+					this.logger.logInfo("Attempting to shutdown system");
+					try {
+						await OSUtils.shutdown(10);
+						this.logger.logInfo("Shutdown request successful");
+					} catch (err) {
+						this.logger.logError("Failed to shutdown os");
+						console.error(error);
+					}
+				} else {
+					this.logger.logInfo("Preventing shutdown since update was killed by user");
+				}
 			}
 
 			resolve();
