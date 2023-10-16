@@ -2,7 +2,7 @@ import React, { ChangeEvent, useEffect, useState } from 'react'
 import { useSteamUpdater } from '../../context/SteamUpdaterContext';
 import { SteamUpdaterFrontendEvent } from '../../script/SteamUpdaterFrontend';
 import { SteamGameLookupError, SteamGameLookupResult } from '../../../shared/dto/SteamGameLookup';
-import { Button, Col, Container, FormControl, FormLabel, FormSelect, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Ratio, Row } from 'react-bootstrap';
+import { Button, Col, Container, FormControl, FormLabel, FormSelect, InputGroup, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle, Ratio, Row } from 'react-bootstrap';
 import { BsSearch } from 'react-icons/bs';
 import SteamAccountSelectOptions from '../SteamAccountSelectOptions';
 import SteamGame from '../../../shared/config/SteamGame';
@@ -117,16 +117,12 @@ export default function AddGameModal({ visible, onClose, onAddGame }: Props) {
 					<Row>
 						<Col>
 							<FormLabel>AppID</FormLabel>
-						</Col>
-					</Row>
-					<Row>
-						<Col xs={10} sm={10} md={10}>
-							<FormControl value={appId} onChange={handleAppIdChange} type='number' min={0} placeholder='AppID' />
-						</Col>
-						<Col xs={2} sm={2} md={2}>
-							<Button type="button" onClick={searchForAppId}>
-								<BsSearch />
-							</Button>
+							<InputGroup>
+								<FormControl value={appId} onChange={handleAppIdChange} type='number' min={0} placeholder='AppID' />
+								<Button type="button" onClick={searchForAppId}>
+									<BsSearch />
+								</Button>
+							</InputGroup>
 						</Col>
 					</Row>
 

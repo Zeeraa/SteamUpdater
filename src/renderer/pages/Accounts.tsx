@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useSteamUpdater } from '../context/SteamUpdaterContext'
-import { Col, Container, Row, Table } from 'react-bootstrap';
+import { Button, Col, Container, Row, Table } from 'react-bootstrap';
 import { SteamAccountTableEntry } from '../components/SteamAccountTableEntry';
 
 import "../table_fit.css";
@@ -9,11 +9,14 @@ import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
 import StartLoginTestButton from '../components/buttons/StartLoginTestButton';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
 import KillButton from '../components/buttons/KillButton';
+import AddAccountModal from '../components/modals/AddAccountModal';
 
 export default function Accounts() {
 	const steamUpdater = useSteamUpdater();
 
 	const [accounts, setAccounts] = useState<SteamAccount[]>(steamUpdater.config.accounts);
+	const [addAccountVisible, setAddAccountVisible] = useState<boolean>(false);
+
 	useEffect(() => {
 		const handleConfigChange = (newConfig: SteamUpdaterConfig) => {
 			setAccounts(newConfig.accounts);
@@ -23,6 +26,22 @@ export default function Accounts() {
 			steamUpdater.events.off(SteamUpdaterFrontendEvent.CONFIG_CHANGED, handleConfigChange);
 		};
 	}, []);
+
+	function showAddAccountModal() {
+		setAddAccountVisible(true);
+	}
+
+	function hideAddAccountModal() {
+		setAddAccountVisible(false);
+	}
+
+	function addAccount(acccount: SteamAccount) {
+		hideAddAccountModal();
+		const config: SteamUpdaterConfig = {...steamUpdater.config};
+		config.accounts.push(acccount);
+		steamUpdater.config = config;
+		steamUpdater.saveConfig();
+	}
 
 	return (
 		<div className='mt-2'>
@@ -49,6 +68,15 @@ export default function Accounts() {
 							<tbody>
 								{accounts.map(account => <SteamAccountTableEntry key={account.id} steamAccount={account} />)}
 							</tbody>
+
+							<tbody>
+								<tr>
+									<td colSpan={4}></td>
+									<td>
+										<Button className='w-100' variant='success' onClick={showAddAccountModal}>Add</Button>
+									</td>
+								</tr>
+							</tbody>
 						</Table>
 					</Col>
 				</Row>
@@ -60,6 +88,8 @@ export default function Accounts() {
 					</Col>
 				</Row>
 			</Container>
+
+			<AddAccountModal visible={addAccountVisible} onClose={hideAddAccountModal} onAddAccount={addAccount} />
 		</div>
 	)
 }

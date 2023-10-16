@@ -13,9 +13,9 @@ import { Nav } from 'react-bootstrap';
 import CustomNavLink from './components/CustomNavLink';
 import { Toaster } from 'react-hot-toast';
 import { useSteamUpdater } from './context/SteamUpdaterContext';
-import UpdateStatus from './components/popups/UpdateStatus';
+import UpdateStatus from './components/modals/UpdateStatus';
 import ErrorNotification from './components/ErrorNotification';
-import UpdatePending from './components/popups/UpdatePending';
+import UpdatePending from './components/modals/UpdatePending';
 
 export default function App() {
 	const steamUpdater = useSteamUpdater();
