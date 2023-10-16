@@ -104,6 +104,14 @@ export default function Settings() {
 
 		steamUpdater.config = {
 			...steamUpdater.config,
+			discordWebhookConfig: {
+				...steamUpdater.config.discordWebhookConfig,
+				enabled: discordWebhookEnabled,
+				pingForGameProgress: discordWebhookPingForGameProgress,
+				pings: discordWebhookPings,
+				showGameProgress: discordWebhookShowGameProgress,
+				webhook: discordWebhookUrl
+			},
 			steamPath: steamappsPath,
 			mode: mode as SteamUpdaterMode,
 			scheduledUpdateTime: time,
@@ -179,12 +187,12 @@ export default function Settings() {
 				<Row>
 					<Col xs={12} md={6} className='mt-2'>
 						<FormLabel>Webhook URL</FormLabel>
-						<PasswordInputGroup placeholder='Webhook URL' value={discordWebhookUrl} onChange={handleDiscordWebhookUrlChange}/>
+						<PasswordInputGroup placeholder='Webhook URL' value={discordWebhookUrl} onChange={handleDiscordWebhookUrlChange} />
 					</Col>
 
 					<Col xs={12} md={6} className='mt-2'>
 						<FormLabel>Pings</FormLabel>
-						<FormControl type="text" placeholder='Pings' value={discordWebhookPings} />
+						<FormControl type="text" placeholder='Pings' value={discordWebhookPings} onChange={handleDiscordWebhookPingsChange} />
 					</Col>
 				</Row>
 
@@ -195,6 +203,14 @@ export default function Settings() {
 
 					<Col xs={12} md={6} className='mt-2'>
 						<FormCheck type='switch' checked={discordWebhookPingForGameProgress} onChange={handleDiscordWebhookPingForGameProgressChange} label="Ping on game progress" />
+					</Col>
+				</Row>
+
+				<Row className='mt-2'>
+					<Col>
+						<p>
+							To ping a role you have to use <code>&lt;@&12345&gt;</code> and to ping a user <code>&lt;@12345&gt;</code> with your role or user id instead
+						</p>
 					</Col>
 				</Row>
 
