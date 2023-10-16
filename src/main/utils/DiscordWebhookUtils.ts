@@ -2,11 +2,12 @@ import { MessageBuilder, Webhook } from "discord-webhook-node";
 import SteamGame from "../../shared/config/SteamGame";
 import { format } from 'date-fns';
 import { SteamUpdaterConfig } from "../../shared/SteamUpdaterConfig";
+import { SteamUpdaterMode } from "../../shared/config/SteamUpdaterMode";
 
 export default class DiscordWebhookUtils {
 	public static THUMBNAIL: string = "https://zeeraa.s3.eu-north-1.amazonaws.com/steamupdater/assets/img/icon.png";
 
-	static async sendStartMessage(config: SteamUpdaterConfig, games: SteamGame[]) {
+	static async sendStartMessage(config: SteamUpdaterConfig, games: SteamGame[], reason: SteamUpdaterMode) {
 		const gamesString = games.reduce((result, item) => {
 			if (result !== "") {
 				return result + ', ' + item.displayName;
@@ -18,6 +19,22 @@ export default class DiscordWebhookUtils {
 		const webhook = new Webhook(config.discordWebhookConfig.webhook);
 		const embed = new MessageBuilder();
 
+		let type = "Update started";
+		switch (reason) {
+			case SteamUpdaterMode.AUTO:
+				type = "Automatic update started"
+				break;
+
+			case SteamUpdaterMode.SCHEDULED:
+				type = "Scheduled update started"
+				break;
+
+			case SteamUpdaterMode.MANUAL:
+				type = "Manually triggered update"
+				break;
+			default: break;
+		}
+
 		embed.setTitle("Update started");
 		embed.setColor(0x00FF00);
 		if (config.discordWebhookConfig.pings.trim().length > 0) {
@@ -26,6 +43,7 @@ export default class DiscordWebhookUtils {
 		embed.setDescription("Update of " + games.length + " games started at " + format(new Date(), 'yyyy-MM-dd_HH-mm-ss'));
 		embed.addField("Games", gamesString);
 		embed.addField("Steam directory", config.steamPath);
+		embed.addField("Reason", reason);
 		embed.setTimestamp();
 		embed.setThumbnail(DiscordWebhookUtils.THUMBNAIL);
 		await webhook.send(embed);

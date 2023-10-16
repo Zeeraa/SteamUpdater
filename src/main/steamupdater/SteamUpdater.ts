@@ -119,7 +119,7 @@ export default class SteamUpdater {
 		}
 
 		ipcMain.on('ipc-main', async (event, args) => {
-			console.log(args);
+			//console.log(args);
 			switch (args.action as IPCAction) {
 				case IPCAction.FONTEND_REQUEST_CONFIG:
 					console.debug("Sending config to client");
@@ -238,7 +238,7 @@ export default class SteamUpdater {
 						this.sendToast("Cant start update because SteamCMD is already running", ToastType.ERROR);
 					} else {
 						try {
-							await this.runUpdate();
+							await this.runUpdate(SteamUpdaterMode.MANUAL);
 						} catch (err) {
 							this.logger.logError("Update failed");
 							console.error(err);
@@ -272,7 +272,7 @@ export default class SteamUpdater {
 				if (this._state.autoStartTimeLeftSeconds <= 0) {
 					this._state.autoStartPending = false;
 					this.updateState();
-					this.runUpdate();
+					this.runUpdate(SteamUpdaterMode.AUTO);
 					return;
 				}
 				this._state.autoStartTimeLeftSeconds = this._state.autoStartTimeLeftSeconds - 1;
@@ -287,7 +287,7 @@ export default class SteamUpdater {
 						this.lastScheduledUpdateRunDay = DateUtils.getDayNumber();
 						if (this.state.state == State.READY) {
 							this.logger.logInfo("Scheduled update started at " + format(new Date(), 'yyyy-MM-dd HH:mm:ss'));
-							this.runUpdate();
+							this.runUpdate(SteamUpdaterMode.SCHEDULED);
 						} else {
 							this.logger.logError("Could not start scheduled update since we are not in a ready state");
 							this.discordLogErrorState();
@@ -320,10 +320,10 @@ export default class SteamUpdater {
 		}
 	}
 
-	private async discordLogStart(games: SteamGame[]) {
+	private async discordLogStart(games: SteamGame[], reason: SteamUpdaterMode) {
 		if (this.config.discordWebhookConfig.enabled) {
 			try {
-				await DiscordWebhookUtils.sendStartMessage(this.config, games);
+				await DiscordWebhookUtils.sendStartMessage(this.config, games, reason);
 			} catch (err) {
 				this.logger.logError("An error occured while sending discord webhook message. Check that the webhook url is correct");
 				console.error(err);
@@ -490,7 +490,7 @@ export default class SteamUpdater {
 		}
 	}
 
-	runUpdate(): Promise<void> {
+	runUpdate(reason: SteamUpdaterMode): Promise<void> {
 		this.updateStartedAtTime();
 		this.updateGameStartedAtTime();
 		return new Promise(async (resolve, reject) => {
@@ -520,7 +520,7 @@ export default class SteamUpdater {
 
 				const games = this.config.games.filter(game => !game.disabled && !isAccountDisabled(game));
 
-				await this.discordLogStart(games);
+				await this.discordLogStart(games, reason);
 
 				for (let i = 0; i < games.length; i++) {
 					if (this.updateKilled) {
