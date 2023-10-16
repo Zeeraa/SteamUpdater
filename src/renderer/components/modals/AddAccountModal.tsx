@@ -79,7 +79,7 @@ export default function AddAccountModal({ visible, onClose, onAddAccount }: Prop
 						</Col>
 					</Row>
 
-					<Row class="mt-4">
+					<Row className="mt-4">
 						<Col>
 							<FormLabel>Password</FormLabel>
 							<PasswordInputGroup value={password} onChange={handlePasswordChange} placeholder='Password' />
