@@ -26,6 +26,25 @@ interface S3Config {
 }
 
 async function init() {
+	let mainWindow: BrowserWindow | null = null;
+
+	const gotLock = app.requestSingleInstanceLock();
+
+	if (!gotLock) {
+		app.quit();
+		process.exit(0);
+	}
+
+	app.on('second-instance', (event, commandLine, workingDirectory) => {
+		// Someone tried to run a second instance, we should focus our window.
+		if (mainWindow) {
+			if (mainWindow.isMinimized()) {
+				mainWindow.restore();
+			}
+			mainWindow.focus();
+		}
+	});
+
 	const version = "0.0.1";
 	try {
 		console.log("Version: " + version);
@@ -33,7 +52,7 @@ async function init() {
 		const configRequest = await axios.get("https://zeeraa.s3.eu-north-1.amazonaws.com/steamupdater/settings.json");
 		const config: S3Config = configRequest.data;
 
-		if(VersionUtils.compareVersionNumbers(version, config.minimum_allowed_version) < 0) {
+		if (VersionUtils.compareVersionNumbers(version, config.minimum_allowed_version) < 0) {
 			dialog.showErrorBox("Steam Updater", "You need to update to version " + config.minimum_allowed_version + " or later to continue running this application");
 			console.error("You need to update to version " + config.minimum_allowed_version + " or later to continue running this application");
 			process.exit(1);
@@ -56,8 +75,6 @@ async function init() {
 			autoUpdater.checkForUpdatesAndNotify();
 		}
 	}
-
-	let mainWindow: BrowserWindow | null = null;
 
 	if (process.env.NODE_ENV === 'production') {
 		const sourceMapSupport = require('source-map-support');
