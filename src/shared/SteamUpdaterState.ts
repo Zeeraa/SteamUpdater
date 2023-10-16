@@ -2,6 +2,7 @@ import SteamAccount from "./config/SteamAccount";
 import SteamGame from "./config/SteamGame";
 
 export default interface SteamUpdaterState {
+	version: string;
 	state: State;
 	loginTestRunning: boolean;
 	updateStatus?: UpdateStatus;

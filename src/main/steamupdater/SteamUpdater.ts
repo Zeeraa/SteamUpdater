@@ -27,6 +27,7 @@ import SteamGame from '../../shared/config/SteamGame';
 import OSUtils from './os/OSUtils';
 import DateUtils from '../../shared/utils/DateUtils';
 import DiscordWebhookUtils from '../utils/DiscordWebhookUtils';
+import { trackEvent } from "@aptabase/electron/main";
 
 export default class SteamUpdater {
 	// Classes
@@ -50,12 +51,14 @@ export default class SteamUpdater {
 	private updateStartedAt: string;
 	private gameUpdateStartedAt: string;
 	private lastScheduledUpdateRunDay: number;
+	private version: string;
 
 	// Intervals
 	private autoStartTimer: NodeJS.Timeout;
 
-	constructor() {
+	constructor(version: string) {
 		this.mainWindow = null;
+		this.version = version;
 		this.currentSteamcmdProcess = null;
 		this.loginTestRunning = false;
 		this.updateStatus = null;
@@ -63,6 +66,7 @@ export default class SteamUpdater {
 		this.updateStartedAt = "1970-01-01 00:00:00";
 		this.gameUpdateStartedAt = "1970-01-01 00:00:00";
 		this._state = {
+			version: this.version,
 			state: State.READY,
 			loginTestRunning: false,
 			steamappsPathError: false,
@@ -296,6 +300,8 @@ export default class SteamUpdater {
 				}
 			}
 		}, 1000);
+
+		trackEvent("Steamupdater Started", { mode: this.config.mode, steamupdater_version: this.version });
 	}
 
 	private async discordLogErrorState() {
@@ -493,6 +499,7 @@ export default class SteamUpdater {
 	runUpdate(reason: SteamUpdaterMode): Promise<void> {
 		this.updateStartedAtTime();
 		this.updateGameStartedAtTime();
+
 		return new Promise(async (resolve, reject) => {
 			this.updateKilled = false;
 			this.processRunning = true;
@@ -519,6 +526,8 @@ export default class SteamUpdater {
 				}
 
 				const games = this.config.games.filter(game => !game.disabled && !isAccountDisabled(game));
+
+				trackEvent("Update Started", { reason: reason, game_count: games.length as number });
 
 				await this.discordLogStart(games, reason);
 

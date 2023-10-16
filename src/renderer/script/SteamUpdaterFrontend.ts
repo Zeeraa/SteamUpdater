@@ -31,6 +31,7 @@ export default class SteamUpdaterFrontend {
 
 	constructor() {
 		this._state = {
+			version: "0.0.0",
 			loginTestRunning: false,
 			state: State.READY,
 			steamappsPathError: false,

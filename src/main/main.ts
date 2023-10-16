@@ -9,127 +9,159 @@
  * `./src/main.js` using webpack. This gives us some performance wins.
  */
 import path from 'path';
-import { app, BrowserWindow, shell, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, dialog } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 import DataFolder from './utils/DataFolder';
 import SteamUpdater from './steamupdater/SteamUpdater';
+import axios from 'axios';
+import VersionUtils from '../shared/utils/VersionUtils';
+import { initialize } from "@aptabase/electron/main";
 
-DataFolder.mkdir();
+initialize("A-EU-2625809505");
 
-const steamUpdater = new SteamUpdater();
+interface S3Config {
+	minimum_allowed_version: string
+}
 
-class AppUpdater {
-	constructor() {
-		log.transports.file.level = 'info';
-		autoUpdater.logger = log;
-		autoUpdater.checkForUpdatesAndNotify();
+async function init() {
+	const version = "0.0.1";
+	try {
+		console.log("Version: " + version);
+		console.log("Fetching program config from s3");
+		const configRequest = await axios.get("https://zeeraa.s3.eu-north-1.amazonaws.com/steamupdater/settings.json");
+		const config: S3Config = configRequest.data;
+
+		if(VersionUtils.compareVersionNumbers(version, config.minimum_allowed_version) < 0) {
+			dialog.showErrorBox("Steam Updater", "You need to update to version " + config.minimum_allowed_version + " or later to continue running this application");
+			console.error("You need to update to version " + config.minimum_allowed_version + " or later to continue running this application");
+			process.exit(1);
+		}
+	} catch (err) {
+		console.error(err);
+		console.error("Failed to fetch settings from Amazon S3. Check your connection and try again");
+		dialog.showErrorBox("Steam Updater", "Failed to fetch settings from Amazon S3. Check your connection and try again");
+		process.exit(1);
 	}
-}
 
-let mainWindow: BrowserWindow | null = null;
+	DataFolder.mkdir();
 
-if (process.env.NODE_ENV === 'production') {
-	const sourceMapSupport = require('source-map-support');
-	sourceMapSupport.install();
-}
+	const steamUpdater = new SteamUpdater(version);
 
-const isDebug =
-	process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
+	class AppUpdater {
+		constructor() {
+			log.transports.file.level = 'info';
+			autoUpdater.logger = log;
+			autoUpdater.checkForUpdatesAndNotify();
+		}
+	}
 
-if (isDebug) {
-	require('electron-debug')();
-}
+	let mainWindow: BrowserWindow | null = null;
 
-const installExtensions = async () => {
-	const installer = require('electron-devtools-installer');
-	const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
-	const extensions = ['REACT_DEVELOPER_TOOLS'];
+	if (process.env.NODE_ENV === 'production') {
+		const sourceMapSupport = require('source-map-support');
+		sourceMapSupport.install();
+	}
 
-	return installer
-		.default(
-			extensions.map((name) => installer[name]),
-			forceDownload,
-		)
-		.catch(console.log);
-};
+	const isDebug = process.env.NODE_ENV === 'development' || process.env.DEBUG_PROD === 'true';
 
-const createWindow = async () => {
 	if (isDebug) {
-		await installExtensions();
+		require('electron-debug')();
 	}
 
-	const RESOURCES_PATH = app.isPackaged
-		? path.join(process.resourcesPath, 'assets')
-		: path.join(__dirname, '../../assets');
+	const installExtensions = async () => {
+		const installer = require('electron-devtools-installer');
+		const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
+		const extensions = ['REACT_DEVELOPER_TOOLS'];
 
-	const getAssetPath = (...paths: string[]): string => {
-		return path.join(RESOURCES_PATH, ...paths);
+		return installer
+			.default(
+				extensions.map((name) => installer[name]),
+				forceDownload,
+			)
+			.catch(console.log);
 	};
 
-	mainWindow = new BrowserWindow({
-		autoHideMenuBar: true,
-		show: false,
-		width: 1024,
-		height: 728,
-		icon: getAssetPath('icon.png'),
-		webPreferences: {
-			preload: app.isPackaged
-				? path.join(__dirname, 'preload.js')
-				: path.join(__dirname, '../../.erb/dll/preload.js'),
-		},
-	});
-
-	mainWindow.loadURL(resolveHtmlPath('index.html'));
-
-	mainWindow.on('ready-to-show', () => {
-		if (!mainWindow) {
-			throw new Error('"mainWindow" is not defined');
+	const createWindow = async () => {
+		if (isDebug) {
+			await installExtensions();
 		}
-		steamUpdater.mainWindow = mainWindow;
-		if (process.env.START_MINIMIZED) {
-			mainWindow.minimize();
-		} else {
-			mainWindow.show();
-		}
-	});
 
-	mainWindow.on('closed', () => {
-		mainWindow = null;
-	});
+		const RESOURCES_PATH = app.isPackaged
+			? path.join(process.resourcesPath, 'assets')
+			: path.join(__dirname, '../../assets');
 
-	// Open urls in the user's browser
-	mainWindow.webContents.setWindowOpenHandler((edata) => {
-		shell.openExternal(edata.url);
-		return { action: 'deny' };
-	});
+		const getAssetPath = (...paths: string[]): string => {
+			return path.join(RESOURCES_PATH, ...paths);
+		};
 
-	// Remove this if your app does not use auto updates
-	// eslint-disable-next-line
-	new AppUpdater();
-};
-
-/**
- * Add event listeners...
- */
-
-app.on('window-all-closed', () => {
-	// Respect the OSX convention of having the application in memory even
-	// after all windows have been closed
-	if (process.platform !== 'darwin') {
-		app.quit();
-	}
-});
-
-app.whenReady()
-	.then(() => {
-		createWindow();
-		steamUpdater.init();
-		app.on('activate', () => {
-			// On macOS it's common to re-create a window in the app when the
-			// dock icon is clicked and there are no other windows open.
-			if (mainWindow === null) createWindow();
+		mainWindow = new BrowserWindow({
+			autoHideMenuBar: true,
+			show: false,
+			width: 1024,
+			height: 728,
+			icon: getAssetPath('icon.png'),
+			webPreferences: {
+				preload: app.isPackaged
+					? path.join(__dirname, 'preload.js')
+					: path.join(__dirname, '../../.erb/dll/preload.js'),
+			},
 		});
-	})
-	.catch(console.log);
+
+		mainWindow.loadURL(resolveHtmlPath('index.html'));
+
+		mainWindow.on('ready-to-show', () => {
+			if (!mainWindow) {
+				throw new Error('"mainWindow" is not defined');
+			}
+			steamUpdater.mainWindow = mainWindow;
+			if (process.env.START_MINIMIZED) {
+				mainWindow.minimize();
+			} else {
+				mainWindow.show();
+			}
+		});
+
+		mainWindow.on('closed', () => {
+			mainWindow = null;
+		});
+
+		// Open urls in the user's browser
+		mainWindow.webContents.setWindowOpenHandler((edata) => {
+			shell.openExternal(edata.url);
+			return { action: 'deny' };
+		});
+
+		// Remove this if your app does not use auto updates
+		// eslint-disable-next-line
+		new AppUpdater();
+	};
+
+	/**
+	 * Add event listeners...
+	 */
+
+	app.on('window-all-closed', () => {
+		// Respect the OSX convention of having the application in memory even
+		// after all windows have been closed
+		if (process.platform !== 'darwin') {
+			app.quit();
+		}
+	});
+
+	app.whenReady()
+		.then(() => {
+			createWindow();
+			steamUpdater.init();
+			app.on('activate', () => {
+				// On macOS it's common to re-create a window in the app when the
+				// dock icon is clicked and there are no other windows open.
+				if (mainWindow === null) createWindow();
+			});
+		})
+		.catch(console.log);
+
+}
+
+init();

@@ -1,6 +1,6 @@
 {
 	"name": "steamupdater-electron",
-	"version": "1.0.0",
+	"version": "0.0.1",
 	"description": "A tool to update steam games",
 	"main": "./dist/main/main.js",
 	"author": "Anton Udén",
