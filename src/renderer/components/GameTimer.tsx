@@ -10,7 +10,6 @@ export default function GameTimer() {
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			console.log(steamUpdater.state.gameUpdateStartedAt);
 			const start = parse(steamUpdater.state.gameUpdateStartedAt, "yyyy-MM-dd HH:mm:ss", new Date());
 			const now = new Date();
 
