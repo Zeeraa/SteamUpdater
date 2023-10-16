@@ -1,14 +1,14 @@
 import React, { ChangeEvent, useEffect, useState } from 'react';
-import { Button, Col, Container, FormCheck, FormControl, FormLabel, FormSelect, Row } from 'react-bootstrap';
-import { AiFillFolder } from "react-icons/ai";
+import { Button, Col, Container, FormCheck, FormControl, FormLabel, FormSelect, InputGroup, Row } from 'react-bootstrap';
+import { AiFillFolder, AiFillEye } from "react-icons/ai";
 import { SteamUpdaterConfig } from '../../shared/SteamUpdaterConfig';
 import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import { SteamUpdaterFrontendEvent } from '../script/SteamUpdaterFrontend';
 import SteamappsSelectedResponse from '../../shared/dto/SteamappsSelectedResponse';
 import toast from 'react-hot-toast';
 import ReinstallSteamCMDButton from '../components/buttons/ReinstallSteamCMDButton';
-import { config } from 'process';
 import { SteamUpdaterMode } from '../../shared/config/SteamUpdaterMode';
+import PasswordInputGroup from '../components/PasswordInputGroup';
 
 export default function Settings() {
 	const steamUpdater = useSteamUpdater();
@@ -18,10 +18,23 @@ export default function Settings() {
 	const [shutdownOnFinish, setShutdownOnFinish] = useState<boolean>(steamUpdater.config.shutdownOnFinish);
 	const [steamappsFolder, setSteamappsFolder] = useState<string>(steamUpdater.config.steamPath == null ? "" : steamUpdater.config.steamPath);
 
+	const [discordWebhookEnabled, setDiscordWebhookEnabled] = useState<boolean>(steamUpdater.config.discordWebhookConfig.enabled);
+	const [discordWebhookUrl, setDiscordWebhookUrl] = useState<string>(steamUpdater.config.discordWebhookConfig.webhook);
+	const [discordWebhookPings, setDiscordWebhookPings] = useState<string>(steamUpdater.config.discordWebhookConfig.pings);
+	const [discordWebhookPingForGameProgress, setDiscordWebhookPingForGameProgress] = useState<boolean>(steamUpdater.config.discordWebhookConfig.pingForGameProgress);
+	const [discordWebhookShowGameProgress, setDiscordWebhookShowGameProgress] = useState<boolean>(steamUpdater.config.discordWebhookConfig.showGameProgress);
+
 	useEffect(() => {
 		const handleConfigChange = (newConfig: SteamUpdaterConfig) => {
 			setSteamappsFolder(newConfig.steamPath == null ? "" : newConfig.steamPath);
 			setMode(newConfig.mode);
+			setShutdownOnFinish(newConfig.shutdownOnFinish);
+			setDiscordWebhookEnabled(steamUpdater.config.discordWebhookConfig.enabled);
+			setDiscordWebhookUrl(steamUpdater.config.discordWebhookConfig.webhook);
+			setDiscordWebhookPings(steamUpdater.config.discordWebhookConfig.pings);
+			setDiscordWebhookPingForGameProgress(steamUpdater.config.discordWebhookConfig.pingForGameProgress);
+			setDiscordWebhookShowGameProgress(steamUpdater.config.discordWebhookConfig.showGameProgress);
+
 		}
 
 		const handleConfigSaved = () => {
@@ -55,6 +68,27 @@ export default function Settings() {
 
 	function handleModeChange(e: ChangeEvent<any>) {
 		setMode(e.target.value);
+	}
+
+	function handleDiscordWebhookEnabledChange(e: React.FormEvent<HTMLInputElement>) {
+		setDiscordWebhookEnabled(e.currentTarget.checked);
+	}
+
+	function handleDiscordWebhookPingForGameProgressChange(e: React.FormEvent<HTMLInputElement>) {
+		setDiscordWebhookPingForGameProgress(e.currentTarget.checked);
+	}
+
+	function handleDiscordWebhookShowGameProgressChange(e: React.FormEvent<HTMLInputElement>) {
+		setDiscordWebhookShowGameProgress(e.currentTarget.checked);
+	}
+
+
+	function handleDiscordWebhookUrlChange(e: ChangeEvent<any>) {
+		setDiscordWebhookUrl(e.target.value);
+	}
+
+	function handleDiscordWebhookPingsChange(e: ChangeEvent<any>) {
+		setDiscordWebhookPings(e.target.value);
 	}
 
 	function handleTimeChange(e: ChangeEvent<any>) {
@@ -91,14 +125,12 @@ export default function Settings() {
 				<Row className='mt-2'>
 					<Col xs={12}>
 						<FormLabel>steamapps directory</FormLabel>
-					</Col>
-					<Col xs={9}>
-						<FormControl placeholder='steamapps directory' type='text' value={steamappsFolder} onChange={handleSteamappsFolderChange} />
-					</Col>
-					<Col xs={3}>
-						<Button variant='primary' className='w-100' onClick={invokeSteamappsPicker}>
-							<AiFillFolder />
-						</Button>
+						<InputGroup>
+							<FormControl placeholder='steamapps directory' type='text' value={steamappsFolder} onChange={handleSteamappsFolderChange} />
+							<Button variant='primary' onClick={invokeSteamappsPicker}>
+								<AiFillFolder />
+							</Button>
+						</InputGroup>
 					</Col>
 				</Row>
 
@@ -126,7 +158,57 @@ export default function Settings() {
 					</Col>
 				</Row>
 
+				{/* Notifications */}
+				<Row>
+					<Col>
+						<h3>Discord Webhook</h3>
+					</Col>
+				</Row>
+				<Row>
+					<Col>
+						<hr />
+					</Col>
+				</Row>
+
+				<Row className='mt-2'>
+					<Col>
+						<FormCheck type='switch' checked={discordWebhookEnabled} onChange={handleDiscordWebhookEnabledChange} label="Enable" />
+					</Col>
+				</Row>
+
+				<Row>
+					<Col xs={12} md={6} className='mt-2'>
+						<FormLabel>Webhook URL</FormLabel>
+						<PasswordInputGroup placeholder='Webhook URL' value={discordWebhookUrl} onChange={handleDiscordWebhookUrlChange}/>
+					</Col>
+
+					<Col xs={12} md={6} className='mt-2'>
+						<FormLabel>Pings</FormLabel>
+						<FormControl type="text" placeholder='Pings' value={discordWebhookPings} />
+					</Col>
+				</Row>
+
+				<Row>
+					<Col xs={12} md={6} className='mt-2'>
+						<FormCheck type='switch' checked={discordWebhookShowGameProgress} onChange={handleDiscordWebhookShowGameProgressChange} label="Show game progress" />
+					</Col>
+
+					<Col xs={12} md={6} className='mt-2'>
+						<FormCheck type='switch' checked={discordWebhookPingForGameProgress} onChange={handleDiscordWebhookPingForGameProgressChange} label="Ping on game progress" />
+					</Col>
+				</Row>
+
+
+
+
+
 				{/* Buttons */}
+				<Row>
+					<Col>
+						<hr />
+					</Col>
+				</Row>
+
 				<Row className='mt-2'>
 					<Col xs={12} md={6}>
 						<Button variant='success' onClick={save} className='w-100 mt-2'>Save</Button>

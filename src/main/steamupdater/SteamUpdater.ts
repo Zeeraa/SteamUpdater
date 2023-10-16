@@ -26,6 +26,7 @@ import { ConsoleColor } from '../../shared/ConsoleColor';
 import SteamGame from '../../shared/config/SteamGame';
 import OSUtils from './os/OSUtils';
 import DateUtils from '../../shared/utils/DateUtils';
+import DiscordWebhookUtils from '../utils/DiscordWebhookUtils';
 
 export default class SteamUpdater {
 	// Classes
@@ -98,7 +99,9 @@ export default class SteamUpdater {
 				discordWebhookConfig: {
 					enabled: false,
 					pings: "@everyone",
-					webhook: ""
+					webhook: "",
+					pingForGameProgress: false,
+					showGameProgress: true
 				}
 			};
 			this.saveConfig();
@@ -255,6 +258,7 @@ export default class SteamUpdater {
 				this.state.autoStartPending = true;
 			} else {
 				this.logger.logError("Cant start auto update since we are not in a ready state. Fix any config errors and relaunch to start auto update");
+				this.discordLogErrorState();
 			}
 		}
 
@@ -286,11 +290,67 @@ export default class SteamUpdater {
 							this.runUpdate();
 						} else {
 							this.logger.logError("Could not start scheduled update since we are not in a ready state");
+							this.discordLogErrorState();
 						}
 					}
 				}
 			}
 		}, 1000);
+	}
+
+	private async discordLogErrorState() {
+		if (this.config.discordWebhookConfig.enabled) {
+			try {
+				await DiscordWebhookUtils.sendErrorStateMessage(this.config);
+			} catch (err) {
+				this.logger.logError("An error occured while sending discord webhook message. Check that the webhook url is correct");
+				console.error(err);
+			}
+		}
+	}
+
+	private async discordLogError() {
+		if (this.config.discordWebhookConfig.enabled) {
+			try {
+				await DiscordWebhookUtils.sendErrorStateMessage(this.config);
+			} catch (err) {
+				this.logger.logError("An error occured while sending discord webhook message. Check that the webhook url is correct");
+				console.error(err);
+			}
+		}
+	}
+
+	private async discordLogStart(games: SteamGame[]) {
+		if (this.config.discordWebhookConfig.enabled) {
+			try {
+				await DiscordWebhookUtils.sendStartMessage(this.config, games);
+			} catch (err) {
+				this.logger.logError("An error occured while sending discord webhook message. Check that the webhook url is correct");
+				console.error(err);
+			}
+		}
+	}
+
+	private async discordLogGame(game: SteamGame, index: number, total: number) {
+		if (this.config.discordWebhookConfig.enabled) {
+			try {
+				await DiscordWebhookUtils.sendGameMessage(this.config, game, index, total);
+			} catch (err) {
+				this.logger.logError("An error occured while sending discord webhook message. Check that the webhook url is correct");
+				console.error(err);
+			}
+		}
+	}
+
+	private async discordLogFinish(updateCount: number) {
+		if (this.config.discordWebhookConfig.enabled) {
+			try {
+				await DiscordWebhookUtils.sendFinishMessage(this.config, updateCount);
+			} catch (err) {
+				this.logger.logError("An error occured while sending discord webhook message. Check that the webhook url is correct");
+				console.error(err);
+			}
+		}
 	}
 
 	private updateStartedAtTime(): void {
@@ -442,6 +502,8 @@ export default class SteamUpdater {
 			this.logger.logInfo("Steamcmd steamapps folder: " + steamcmdSteamappsPath);
 			var currentSymlink: string = null;
 
+			let updateCount = 0;
+
 			try {
 				const isAccountDisabled = (game: SteamGame): boolean => {
 					if (game.accountId == null) {
@@ -458,12 +520,16 @@ export default class SteamUpdater {
 
 				const games = this.config.games.filter(game => !game.disabled && !isAccountDisabled(game));
 
+				await this.discordLogStart(games);
+
 				for (let i = 0; i < games.length; i++) {
 					if (this.updateKilled) {
 						break;
 					}
 
 					const game = games[i];
+
+					await this.discordLogGame(game, i + 1, games.length);
 
 					this.updateStatus = {
 						currentIndex: i + 1,
@@ -513,11 +579,14 @@ export default class SteamUpdater {
 					} else {
 						this.logger.logError("SteamCMD exited with non zero exit code " + exitCode);
 					}
+
+					updateCount++;
 				}
 
 				this.logger.logInfo("Update completed", ConsoleColor.GREEN);
 			} catch (err) {
 				error = err;
+				await this.discordLogError();
 				this.logger.logError("An exception occured while running update");
 				console.error(err);
 			}
@@ -549,6 +618,8 @@ export default class SteamUpdater {
 					this.logger.logInfo("Preventing shutdown since update was killed by user");
 				}
 			}
+
+			await this.discordLogFinish(updateCount);
 
 			resolve();
 		});

@@ -21,7 +21,7 @@ export default function HiddenPasswordSpan({ password }: Props) {
 	return (
 		<span>
 			<span>{passwordVisible ? password : maskPassword(password)}</span>
-			<span className='hidden-password-toggle' onClick={toggle}>{passwordVisible ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}</span>
+			<span className='mx-2 hidden-password-toggle' onClick={toggle}>{passwordVisible ? <AiOutlineEyeInvisible /> : <AiOutlineEye />}</span>
 		</span>
 	)
 

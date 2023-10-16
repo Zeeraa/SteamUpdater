@@ -52,7 +52,9 @@ export default class SteamUpdaterFrontend {
 			discordWebhookConfig: {
 				enabled: false,
 				pings: "@everyone",
-				webhook: ""
+				webhook: "",
+				pingForGameProgress: false,
+				showGameProgress: true
 			}
 		};
 

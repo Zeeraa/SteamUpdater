@@ -5,6 +5,7 @@ import { useSteamUpdater } from '../context/SteamUpdaterContext';
 import HiddenPasswordSpan from './password/HiddenPasswordSpan';
 import toast from 'react-hot-toast';
 import "../table_fit.css";
+import PasswordInputGroup from './PasswordInputGroup';
 
 interface Props {
 	steamAccount: SteamAccount
@@ -47,12 +48,12 @@ export function SteamAccountTableEntry({ steamAccount }: Props) {
 	}
 
 	function handleEditSave() {
-		if(editUsername.trim().length == 0) {
+		if (editUsername.trim().length == 0) {
 			toast.error("Username cant be empty");
 			return;
 		}
 
-		if(steamUpdater.config.accounts.filter((account => account.id != steamAccount.id && account.username.toLowerCase() == editUsername.trim().toLowerCase())).length > 0) {
+		if (steamUpdater.config.accounts.filter((account => account.id != steamAccount.id && account.username.toLowerCase() == editUsername.trim().toLowerCase())).length > 0) {
 			toast.error("An account with that username has already been added");
 			return;
 		}
@@ -143,13 +144,13 @@ export function SteamAccountTableEntry({ steamAccount }: Props) {
 
 						<Row className='mt-2'>
 							<Col>
-								<FormLabel>Username</FormLabel>
+								<FormLabel>Password</FormLabel>
 							</Col>
 						</Row>
 
 						<Row>
 							<Col>
-								<FormControl value={editPassword} onChange={handlePasswordChange} placeholder='Password' type='password' />
+								<PasswordInputGroup value={editPassword} onChange={handlePasswordChange} placeholder='Password' />
 							</Col>
 						</Row>
 					</Container>
