@@ -45,7 +45,7 @@ async function init() {
 		}
 	});
 
-	const version = "0.0.1";
+	const version = "0.0.2";
 	try {
 		console.log("Version: " + version);
 		console.log("Fetching program config from s3");

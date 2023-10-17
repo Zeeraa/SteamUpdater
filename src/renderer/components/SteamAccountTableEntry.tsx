@@ -63,7 +63,7 @@ export function SteamAccountTableEntry({ steamAccount }: Props) {
 		steamUpdater.config = {
 			...steamUpdater.config,
 			accounts: steamUpdater.config.accounts.map((account: SteamAccount) =>
-				account.id === account.id
+				account.id === steamAccount.id
 					? { ...account, username: editUsername.trim(), password: editPassword }
 					: account
 			)
