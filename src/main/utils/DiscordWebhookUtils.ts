@@ -2,7 +2,7 @@ import SteamGame from "../../shared/config/SteamGame";
 import { format } from 'date-fns';
 import { SteamUpdaterConfig } from "../../shared/SteamUpdaterConfig";
 import { SteamUpdaterMode } from "../../shared/config/SteamUpdaterMode";
-import { EmbedBuilder, MessagePayload, WebhookClient } from "discord.js";
+import { EmbedBuilder, WebhookClient } from "discord.js";
 
 export default class DiscordWebhookUtils {
 	public static THUMBNAIL: string = "https://zeeraa.s3.eu-north-1.amazonaws.com/steamupdater/assets/img/icon.png";

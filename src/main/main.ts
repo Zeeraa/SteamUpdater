@@ -15,8 +15,6 @@ import log from 'electron-log';
 import { resolveHtmlPath } from './util';
 import DataFolder from './utils/DataFolder';
 import SteamUpdater from './steamupdater/SteamUpdater';
-import axios from 'axios';
-import VersionUtils from '../shared/utils/VersionUtils';
 import { initialize } from "@aptabase/electron/main";
 
 initialize("A-EU-2625809505");
@@ -46,23 +44,6 @@ async function init() {
 	});
 
 	const version = "0.0.2";
-	try {
-		console.log("Version: " + version);
-		console.log("Fetching program config from s3");
-		const configRequest = await axios.get("https://zeeraa.s3.eu-north-1.amazonaws.com/steamupdater/settings.json");
-		const config: S3Config = configRequest.data;
-
-		if (VersionUtils.compareVersionNumbers(version, config.minimum_allowed_version) < 0) {
-			dialog.showErrorBox("Steam Updater", "You need to update to version " + config.minimum_allowed_version + " or later to continue running this application");
-			console.error("You need to update to version " + config.minimum_allowed_version + " or later to continue running this application");
-			process.exit(1);
-		}
-	} catch (err) {
-		console.error(err);
-		console.error("Failed to fetch settings from Amazon S3. Check your connection and try again");
-		dialog.showErrorBox("Steam Updater", "Failed to fetch settings from Amazon S3. Check your connection and try again");
-		process.exit(1);
-	}
 
 	DataFolder.mkdir();
 
